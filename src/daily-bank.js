@@ -1,0 +1,146 @@
+// Crude Awakening question bank. [id, difficulty(1 easy, 2 medium, 3 hard), category, question, [correct, w1, w2, w3], explanation]
+const DCATS = {MKT: "Markets", REF: "Refining & products", UPS: "Upstream", GAS: "Gas & LNG", SHP: "Shipping & logistics", GEO: "Geography & history", ENT: "Energy transition", IND: "Industry basics"};
+
+const DAILY_NEW = [
+// ---------- EASY ----------
+["e01",1,"IND","What does OPEC stand for?",["Organization of the Petroleum Exporting Countries","Oil Producers' Economic Council","Organisation for Petroleum and Energy Cooperation","Overseas Petroleum Exporters' Consortium"],"Founded in Baghdad in 1960 by five countries."],
+["e02",1,"IND","How many US gallons are in one barrel of oil?",["42","36","50","55"],"A 55-gallon drum is a different thing from an oil barrel."],
+["e03",1,"MKT","What does WTI stand for?",["West Texas Intermediate","Western Trading Index","World Tanker Index","West Texas Import"],"The US light sweet benchmark, delivered at Cushing, Oklahoma."],
+["e04",1,"IND","Does a higher API gravity mean a lighter or a heavier crude?",["Lighter","Heavier","More sulphur","More viscous"],"API runs inversely to density: 40° is light, 20° is heavy."],
+["e05",1,"IND","A \"sour\" crude has a high content of what?",["Sulphur","Wax","Water","Salt"],"Sweet crude is low in sulphur, typically below about 0.5%."],
+["e06",1,"GAS","What is natural gas mostly made of?",["Methane","Ethane","Propane","Hydrogen"],"Methane (CH₄) is usually 70–90%+ of pipeline gas."],
+["e07",1,"GAS","What does LNG stand for?",["Liquefied natural gas","Light natural gas","Low-nitrogen gas","Liquid naphtha gas"],"Gas is cooled to about −162 °C so it can be shipped."],
+["e08",1,"REF","LPG is mainly a mix of which two gases?",["Propane and butane","Methane and ethane","Ethane and propane","Butane and hydrogen"],"LPG is used for cooking, heating, autogas and petchem feed."],
+["e09",1,"REF","Which fuel do commercial jet engines burn?",["Kerosene-type jet fuel","Diesel","Gasoline","LPG"],"Jet A-1 is the global standard grade."],
+["e10",1,"GEO","The Brent benchmark takes its name from an oilfield in which sea?",["North Sea","Caspian Sea","Norwegian Sea","Baltic Sea"],"The Brent field was in the UK North Sea and has now been decommissioned."],
+["e11",1,"GAS","Henry Hub is the benchmark price for what?",["US natural gas","US crude oil","European gas","Asian LNG"],"It's in Louisiana and is the delivery point for NYMEX gas futures."],
+["e12",1,"IND","In the oil industry, what does \"upstream\" refer to?",["Exploration and production","Refining","Retail fuel stations","Pipelines"],"Upstream is finding and producing; downstream is refining and marketing."],
+["e13",1,"IND","Which activity is \"midstream\"?",["Pipelines, storage and transport","Seismic surveys","Running a refinery","Selling at the pump"],"Midstream moves and stores oil and gas between upstream and downstream."],
+["e14",1,"MKT","What does \"contango\" mean?",["Future prices are higher than spot","Spot prices are higher than futures","Prices are falling fast","Prices are frozen by regulators"],"Contango usually signals ample supply and pays storage holders."],
+["e15",1,"MKT","What does \"backwardation\" mean?",["Spot prices are higher than futures","Future prices are higher than spot","A market crash","A refinery shutdown"],"Backwardation usually signals tight prompt supply."],
+["e16",1,"REF","What does a crack spread measure?",["The margin between refined products and crude","The cost of fixing a pipeline crack","The gap between Brent and WTI","Tanker freight rates"],"It's the classic proxy for refining margins."],
+["e17",1,"IND","What does \"bpd\" or \"b/d\" stand for?",["Barrels per day","Bulk product delivered","Base price difference","Barrels per drum"],"mb/d means million barrels per day."],
+["e18",1,"UPS","What is \"fracking\" short for?",["Hydraulic fracturing","Fractional cracking","Fractured rock drilling","Fracture tracking"],"High-pressure fluid cracks tight rock so oil and gas can flow."],
+["e19",1,"SHP","What does VLCC stand for?",["Very Large Crude Carrier","Very Low Cost Cargo","Vessel for Liquid Crude Cargo","Very Long Coastal Carrier"],"A VLCC carries about 2 million barrels."],
+["e20",1,"REF","A gasoline octane rating measures its resistance to what?",["Engine knocking","Evaporation","Freezing","Corrosion"],"Higher octane resists premature ignition (knock)."],
+["e21",1,"REF","Which number measures diesel ignition quality?",["Cetane number","Octane number","API gravity","Flash point"],"Higher cetane means quicker, smoother ignition."],
+["e22",1,"UPS","To \"spud\" a well means to do what?",["Start drilling it","Plug and abandon it","Frack it","Test its flow"],"The spud date is when the drill bit first breaks ground."],
+["e23",1,"UPS","What is flaring?",["Burning off unwanted gas at a site","A sudden oil price spike","Cleaning a pipeline with a pig","Lighting a refinery heater"],"Routine flaring wastes gas and adds emissions; many companies target zero."],
+["e24",1,"MKT","What does the weekly rig count track?",["Active drilling rigs","Tankers at sea","Refinery outages","Filling stations"],"Baker Hughes publishes it every Friday."],
+["e25",1,"GAS","In what unit is Henry Hub gas priced?",["$/MMBtu","$/barrel","$/tonne","¢/litre"],"MMBtu means million British thermal units."],
+["e26",1,"SHP","What is fuel sold to ships called?",["Bunkers","Ballast","Bilge","Boilers"],"Singapore is the world's biggest bunkering port."],
+["e27",1,"UPS","What does FPSO stand for?",["Floating production, storage and offloading","Fixed platform subsea operation","Floating pipeline supply outlet","Field production safety officer"],"FPSOs produce and store oil offshore, then offload it to tankers."],
+["e28",1,"UPS","What does EOR stand for?",["Enhanced oil recovery","Estimated oil reserves","End of reservoir","Export oil route"],"Methods include CO₂, steam and chemical flooding."],
+["e29",1,"REF","Which petrochemical building block is made by cracking ethane?",["Ethylene","Benzene","Methanol","Ammonia"],"Ethylene goes on to make polyethylene, the world's most common plastic."],
+["e30",1,"GEO","Cushing, the WTI delivery hub, is in which US state?",["Oklahoma","Texas","Louisiana","Kansas"],"It's known as the \"pipeline crossroads of the world\"."],
+["e31",1,"IND","In API gravity, what does API stand for?",["American Petroleum Institute","Average Petroleum Index","Applied Petroleum Indicator","Atlantic Pricing Index"],"API also sets many industry equipment standards."],
+["e32",1,"REF","Asphalt (bitumen) comes from which part of the barrel?",["The heaviest bottom residue","The light top gases","The middle distillates","The naphtha cut"],"Bitumen is what's left from the heaviest vacuum residue."],
+["e33",1,"IND","What is H₂S?",["Hydrogen sulphide, a toxic gas","Heavy sulphur oil","A hydrogen storage system","A type of sweet crude"],"It smells of rotten eggs at low levels and is deadly at high ones."],
+["e34",1,"UPS","What is a \"wildcat\" well?",["An exploration well in an unproven area","A well that blew out","An illegal well","A well drilled at night"],"Wildcats carry the highest risk and the highest potential reward."],
+["e35",1,"GAS","What does NGLs stand for?",["Natural gas liquids","Next-generation LNG","Nitrogen gas lines","Net gas levels"],"Ethane, propane, butanes and natural gasoline."],
+["e36",1,"REF","Ethanol is commonly blended into which fuel?",["Gasoline","Diesel","Jet fuel","Fuel oil"],"E10 means 10% ethanol."],
+["e37",1,"IND","Why do companies quote \"barrels of oil equivalent\" (boe)?",["To combine oil and gas volumes in one unit","To price crude in euros","To measure tanker size","To track refinery runs"],"Gas is converted on an energy basis, commonly 6,000 cubic feet per boe."],
+["e38",1,"IND","Roughly how many barrels are in a tonne of average crude?",["About 7.3","About 3","About 12","About 20"],"Lighter crudes have more barrels per tonne; heavier crudes fewer."],
+["e39",1,"REF","On a crude distillation column, which cut comes off between naphtha and diesel?",["Kerosene (jet)","Fuel oil","LPG","Bitumen"],"Lighter cuts come off higher up the column."],
+["e40",1,"MKT","What is \"floating storage\"?",["Oil stored on tankers at sea","Tanks with floating roofs","Oil kept in salt caverns","Futures held without delivery"],"Traders store at sea when contango covers the cost of the ship."],
+["e41",1,"REF","What is a refinery turnaround?",["A planned maintenance shutdown","A switch to a new crude grade","A sudden fire","A change of owner"],"Turnarounds reduce runs and can tighten product markets."],
+["e42",1,"IND","What does NOC stand for?",["National oil company","Net oil consumption","Non-OPEC country","Normal operating capacity"],"Aramco, ADNOC and KPC are all NOCs."],
+["e43",1,"MKT","Brent futures trade mainly on which exchange?",["ICE","NYMEX","SGX","LME"],"WTI's main home is NYMEX, part of CME Group."],
+["e44",1,"REF","Which has more energy per litre: diesel or gasoline?",["Diesel","Gasoline","They're the same","It depends on octane"],"Diesel is denser, at roughly 10–15% more energy per litre."],
+["e45",1,"ENT","What does CCS stand for?",["Carbon capture and storage","Clean crude standard","Combined cycle system","Certified carbon saving"],"CO₂ is captured and injected underground."],
+["e46",1,"ENT","\"Blue\" hydrogen is made from what?",["Natural gas, with carbon capture","Renewable electricity","Coal, without capture","Nuclear power"],"Green hydrogen uses electrolysis powered by renewables."],
+["e47",1,"ENT","What does SAF stand for in aviation?",["Sustainable aviation fuel","Standard aviation fuel","Safety additive fluid","Synthetic air fuel"],"SAF can be blended with conventional jet fuel up to the approved limit."],
+["e48",1,"UPS","What is condensate?",["Very light liquid hydrocarbons from gas fields","Water collected in tanks","Heavy residue from refining","Frozen natural gas"],"It's often blended into crude or used as naphtha-like feed."],
+["e49",1,"ENT","Which scope of emissions covers customers burning the fuel a company sells?",["Scope 3","Scope 1","Scope 2","Scope 0"],"Scope 1 is direct emissions and Scope 2 is purchased power."],
+["e50",1,"REF","Which product is made in the largest volume at most refineries?",["Gasoline or diesel","Bitumen","Lubricants","Petroleum coke"],"Transport fuels dominate refinery output."],
+["e51",1,"GEO","About a fifth of the world's oil supply passes through which strait?",["Strait of Hormuz","Strait of Malacca","Bosphorus","Strait of Gibraltar"],"Hormuz links the Gulf to the Gulf of Oman."],
+["e52",1,"SHP","What does a pipeline \"pig\" do?",["Cleans or inspects the inside of a pipeline","Measures oil prices","Blocks a leak","Pumps oil uphill"],"Pigs travel with the flow, scraping or inspecting the line."],
+["e53",1,"UPS","What is a blowout preventer?",["A large valve stack that seals a well in an emergency","A tank that stores spilled oil","A fire extinguisher on a rig","A type of drill bit"],"The BOP is the last line of defence against an uncontrolled well."],
+["e54",1,"REF","What does \"ULSD\" stand for?",["Ultra-low sulphur diesel","Unleaded light-sweet diesel","Universal low-smoke diesel","Upgraded light sulphur distillate"],"Road diesel in the US and Europe is ULSD."],
+["e55",1,"GAS","What does CNG stand for?",["Compressed natural gas","Cooled natural gas","Crude naphtha gas","Condensed nitrogen gas"],"CNG is stored at high pressure, while LNG is liquefied by cooling."],
+["e56",1,"MKT","Who publishes the monthly Oil Market Report?",["The IEA","The IMF","The World Bank","NYMEX"],"OPEC publishes its own Monthly Oil Market Report too."],
+["e57",1,"IND","What is a \"supermajor\"?",["One of the largest international oil companies","An OPEC member","A huge oilfield","A high-octane fuel"],"ExxonMobil, Shell, Chevron, BP and TotalEnergies are often called supermajors."],
+["e58",1,"UPS","What is a \"dry hole\"?",["A well that finds no commercial oil or gas","A well with no water","An abandoned pipeline","A depleted gas cap"],"Dry holes are written off as exploration expense."],
+["e59",1,"REF","What is a refinery's \"throughput\"?",["The amount of crude it processes","Its total profit","Its number of workers","Its storage capacity"],"It's usually quoted in barrels per day."],
+["e60",1,"SHP","What do Aframax, Suezmax and VLCC describe?",["Tanker size classes","Crude grades","Refinery units","Pipeline types"],"Suezmax is the largest ship that can pass through the Suez Canal fully laden."],
+
+// ---------- MEDIUM ----------
+["m01",2,"GEO","Ghawar, the world's largest conventional oilfield, is in which country?",["Saudi Arabia","Kuwait","Iraq","Iran"],"Ghawar was discovered in 1948."],
+["m02",2,"GEO","The world's largest gas field is shared by Qatar and which other country?",["Iran","Saudi Arabia","UAE","Oman"],"Qatar calls it the North Field; Iran calls it South Pars."],
+["m03",2,"MKT","Which non-OPEC producer co-leads OPEC+?",["Russia","United States","Norway","Brazil"],"OPEC+ was formalised in late 2016."],
+["m04",2,"GEO","In which city is OPEC headquartered?",["Vienna","Riyadh","Geneva","Baghdad"],"OPEC was founded in Baghdad but moved to Vienna in 1965."],
+["m05",2,"GEO","The Bab el-Mandeb strait connects the Red Sea with what?",["Gulf of Aden","Mediterranean","Persian Gulf","Gulf of Oman"],"It's a key chokepoint for Suez-bound traffic."],
+["m06",2,"MKT","Which benchmark is used most for Middle East crude sold to Asia?",["Dubai/Oman","Brent","WTI","Urals"],"Aramco's Asia OSPs are set against the Oman/Dubai average."],
+["m07",2,"GEO","Which group led the 1973 oil embargo?",["Arab members of OPEC (OAPEC)","The IEA","The Seven Sisters","OPEC+"],"The embargo quadrupled oil prices within months."],
+["m08",2,"SHP","Which canal links the Atlantic and Pacific, with locks that cap ship size?",["Panama Canal","Suez Canal","Kiel Canal","Corinth Canal"],"The Neopanamax locks opened in 2016, but VLCCs are still too big."],
+["m09",2,"GEO","The US Strategic Petroleum Reserve stores oil where?",["In salt caverns on the Gulf Coast","In tanks at Cushing","On tankers at sea","In Alaska"],"The sites are in Texas and Louisiana."],
+["m10",2,"GEO","The IEA was created in response to what?",["The 1973–74 oil crisis","World War II","The 2008 price spike","The founding of OPEC"],"Members hold emergency stocks to cover supply shocks."],
+["m11",2,"REF","Which refinery unit turns heavy gasoil into gasoline?",["Fluid catalytic cracker (FCC)","Crude distillation unit","Hydrotreater","Sulphur recovery unit"],"The FCC is the gasoline workhorse of many refineries."],
+["m12",2,"REF","Why do refiners value alkylate in gasoline?",["High octane with no aromatics or sulphur","It's the cheapest component","It raises vapour pressure","It adds oxygen"],"Alkylate is ideal for meeting tight specs."],
+["m13",2,"UPS","The Marcellus shale is mainly known for producing what?",["Natural gas","Heavy oil","Oil sands bitumen","Condensate only"],"It runs under Pennsylvania and nearby states and is the largest US gas play."],
+["m14",2,"GEO","In which year did the Deepwater Horizon disaster happen?",["2010","2005","2012","2008"],"The blowout in the Gulf of Mexico led to sweeping safety reforms."],
+["m15",2,"GEO","Who is the \"peak oil\" theory most associated with?",["M. King Hubbert","John D. Rockefeller","Daniel Yergin","Edwin Drake"],"Hubbert predicted in 1956 that US output would peak around 1970."],
+["m16",2,"GEO","The first US commercial oil well, drilled by Edwin Drake in 1859, was in which state?",["Pennsylvania","Texas","Ohio","California"],"It was at Titusville; Spindletop in Texas came in 1901."],
+["m17",2,"REF","In a 3-2-1 crack spread, what does the ratio mean?",["3 crude → 2 gasoline + 1 distillate","3 gasoline : 2 diesel : 1 jet","3 months forward, 2 back, 1 spot","3 refineries, 2 crudes, 1 product"],"It's a common proxy for US refining margins."],
+["m18",2,"MKT","Which product's demand usually peaks in the US summer?",["Gasoline","Heating oil","Propane","Fuel oil"],"It's the driving season, from Memorial Day to Labor Day."],
+["m19",2,"ENT","Over 100 years, roughly how much more warming does methane cause than CO₂, per tonne?",["About 28–30 times","About 2 times","About 300 times","About the same"],"Over 20 years the factor is above 80, which is why methane leaks matter."],
+["m20",2,"REF","Which unit removes sulphur from diesel?",["Hydrotreater (hydrodesulphurisation)","Coker","Alkylation unit","Vacuum tower"],"Hydrogen reacts with sulphur to form H₂S, which is then recovered."],
+["m21",2,"GEO","Abqaiq in Saudi Arabia is best known as what?",["The world's largest oil processing facility","The largest refinery in Asia","An LNG terminal","A pipeline to the Red Sea"],"It was attacked in September 2019."],
+["m22",2,"GEO","The Kirkuk–Ceyhan pipeline runs from Iraq to which country?",["Turkey","Syria","Jordan","Iran"],"Ceyhan is on Turkey's Mediterranean coast."],
+["m23",2,"GEO","What does the name of the Druzhba pipeline mean?",["Friendship","Unity","Victory","Brotherhood"],"It's one of the world's longest oil pipelines, from Russia into Europe."],
+["m24",2,"REF","What is a \"teapot\" refinery?",["A small independent Chinese refinery","A tiny refinery making tea-coloured fuel","A Japanese pilot plant","A mobile refinery"],"Most teapots are in Shandong province."],
+["m25",2,"MKT","Murban is the flagship crude of which emirate?",["Abu Dhabi","Dubai","Sharjah","Ras Al Khaimah"],"It's light and fairly low in sulphur, and has had its own futures contract since 2021."],
+["m26",2,"SHP","What is the world's largest bunkering port?",["Singapore","Rotterdam","Fujairah","Houston"],"Rotterdam and Fujairah are the next biggest hubs."],
+["m27",2,"MKT","What does the \"ARA\" hub stand for?",["Amsterdam–Rotterdam–Antwerp","Arabian–Red Sea–Atlantic","Asia–Russia–Africa","Aberdeen–Rotterdam–Augusta"],"It's Europe's main oil storage and trading hub."],
+["m28",2,"UPS","What do \"1P\" reserves mean?",["Proved reserves","Probable reserves","Possible reserves","One year of production"],"2P adds probable reserves and 3P adds possible."],
+["m29",2,"GAS","What is TTF?",["The main European gas benchmark (Dutch hub)","A US crude pipeline","An Asian LNG index","A UK electricity price"],"NBP is the UK gas hub."],
+["m30",2,"GAS","What is JKM?",["The Asian spot LNG benchmark","A Japanese crude grade","A Korean refinery","A freight index"],"It's the Japan Korea Marker, assessed by Platts."],
+["m31",2,"REF","Why is ethanol blended into gasoline in many countries?",["It adds octane and meets renewable mandates","It lowers the price of diesel","It removes sulphur","It raises the boiling point"],"Ethanol is a high-octane oxygenate."],
+["m32",2,"MKT","What is \"Dated Brent\"?",["Physical North Sea cargoes with set loading dates","Brent futures for next year","An old Brent price series","Brent priced in euros"],"It's the benchmark used to price a large share of the world's physical crude."],
+["m33",2,"SHP","Roughly how much crude does a fully loaded VLCC carry?",["About 2 million barrels","About 500,000 barrels","About 1 million barrels","About 5 million barrels"],"A Suezmax carries about 1 million barrels and an Aframax about 700,000."],
+["m34",2,"GEO","Which country is home to the Rumaila oilfield?",["Iraq","Kuwait","Iran","Saudi Arabia"],"It's one of the biggest fields in the world, near Basrah."],
+["m35",2,"UPS","The Permian Basin straddles which two US states?",["Texas and New Mexico","Texas and Oklahoma","North Dakota and Montana","Louisiana and Texas"],"It's the largest US oil-producing basin."],
+["m36",2,"UPS","The Bakken shale is mainly in which US state?",["North Dakota","Colorado","Wyoming","Pennsylvania"],"It powered the first wave of the US tight oil boom."],
+["m37",2,"ENT","What is \"green\" hydrogen?",["Hydrogen made by electrolysis using renewable power","Hydrogen from natural gas with CCS","Hydrogen dyed green","Hydrogen from biomass only"],"Grey hydrogen comes from natural gas with no capture."],
+
+// ---------- HARD ----------
+["h01",3,"MKT","Roughly what record did Brent reach in July 2008?",["About $147","About $115","About $128","About $175"],"Prices collapsed below $40 by December that year."],
+["h02",3,"GEO","In which year did the US lift its crude oil export ban?",["2015","2008","2011","2018"],"Congress lifted it in December 2015."],
+["h03",3,"GAS","The first LNG cargo crossed the Atlantic in 1959 aboard which ship?",["Methane Pioneer","Polar Alaska","Al Khor","Q-Max One"],"It carried LNG from Louisiana to Canvey Island in the UK."],
+["h04",3,"GEO","In which year did Qatar leave OPEC?",["2019","2014","2016","2021"],"Its exit took effect in January 2019, so it could focus on gas."],
+["h05",3,"GEO","In which year did Saudi Aramco list on the Tadawul?",["2019","2016","2018","2021"],"It was the largest IPO in history at the time."],
+["h06",3,"UPS","George Mitchell pioneered shale gas fracking in which Texas play?",["Barnett Shale","Eagle Ford","Haynesville","Permian Wolfcamp"],"Mitchell Energy's work near Fort Worth launched the shale revolution."],
+["h07",3,"GEO","Which company discovered oil in Bahrain in 1932?",["Bapco (a Standard Oil of California subsidiary)","Anglo-Persian Oil Company","Aramco","Shell"],"It was the first oil discovery on the Arab side of the Gulf."],
+["h08",3,"GEO","Kuwait's giant Burgan field is ranked roughly where among the world's largest oilfields?",["Second, after Ghawar","Tenth","First","Fifth"],"Burgan was discovered in 1938."],
+["h09",3,"GEO","Which is generally listed as the world's largest offshore oilfield?",["Safaniya","Upper Zakum","Kashagan","Johan Sverdrup"],"Safaniya, in the Saudi Gulf, was found in 1951."],
+["h10",3,"GEO","The Kashagan field is in which body of water?",["Caspian Sea","Black Sea","Barents Sea","Red Sea"],"Its cost overruns made it one of the most expensive developments ever."],
+["h11",3,"UPS","Who operates the Stabroek block off Guyana?",["ExxonMobil","Shell","TotalEnergies","Chevron"],"Since 2015 it has made Guyana one of the fastest-growing producers."],
+["h12",3,"UPS","The Vaca Muerta shale play is in which country?",["Argentina","Brazil","Mexico","Colombia"],"Its name means \"dead cow\"."],
+["h13",3,"GEO","What did the \"Seven Sisters\" refer to?",["The seven oil majors that dominated the industry mid-century","Seven OPEC founding states","Seven giant Saudi oilfields","Seven North Sea platforms"],"The term was coined by Enrico Mattei of Italy's ENI."],
+["h14",3,"GEO","Ras Tanura is best known as what?",["A major Saudi crude export terminal and refinery","An Omani LNG plant","A Qatari gas field","A Kuwaiti refinery"],"It's on Saudi Arabia's Gulf coast."],
+["h15",3,"MKT","In which year was the OPEC+ Declaration of Cooperation first agreed?",["2016","2008","2012","2020"],"The deal was struck in December 2016 to manage the glut."],
+["h16",3,"SHP","What does the SUMED pipeline let crude bypass?",["The Suez Canal","The Strait of Hormuz","The Bosphorus","The Panama Canal"],"It runs from the Red Sea to the Mediterranean across Egypt."],
+["h17",3,"GEO","The East–West (Petroline) pipeline lets Saudi crude reach which coast?",["The Red Sea at Yanbu","The Arabian Sea at Duqm","The Mediterranean","The Gulf of Aden"],"It's a hedge against disruption in Hormuz."],
+["h18",3,"GEO","The Habshan–Fujairah pipeline lets the UAE export while bypassing what?",["The Strait of Hormuz","The Suez Canal","The Bab el-Mandeb","The Strait of Malacca"],"It has run since 2012."],
+["h19",3,"MKT","What did WTI do on 20 April 2020 that had never happened before?",["Settled below zero","Hit $200","Stopped trading for a week","Traded above Brent by $20"],"The May contract settled at −$37.63."],
+["h20",3,"ENT","Under Article 6 of the Paris Agreement, what can countries trade?",["Emissions reductions (carbon credits)","Oil export quotas","LNG cargoes","Refinery capacity"],"Article 6 sets rules for international carbon markets."],
+["h21",3,"UPS","What is the Montney?",["A major Canadian shale/tight gas play","A Norwegian oilfield","A US refinery","An Australian LNG plant"],"It straddles British Columbia and Alberta."],
+["h22",3,"GAS","Q-Max and Q-Flex LNG carriers were built for which country's exports?",["Qatar","Australia","United States","Russia"],"A Q-Max carries about 266,000 m³."]
+];
+
+// Reused from Crack Spread (mainstream enough): medium and hard pools
+const REUSE_MED = ["ref04","bld10","bld16","dis09","fo01","fo08","fo09","ngl04","ngl07","cru04","cru06","ben11","der01","der02","der05","der06","der08","der13","frt02","frt03","frt08","frt11","dat01","dat03","dat04","dat12","gas01","gas02","gas03","gas04","ups04","ups08"];
+const REUSE_HARD = ["ref01","ref02","ref06","ref09","bld05","bld06","bld14","bld15","bld17","bld19","dis06","dis10","dis11","fo02","ngl05","cru02","cru13","ben01","der10","der12","frt04","frt05","dat02","ups02","ups05"];
+const CS_TO_D = {GEN:"GEO",ENT:"ENT",REF:"REF",BLD:"REF",DIS:"REF",FO:"SHP",NGL:"REF",CRU:"IND",BEN:"MKT",DER:"MKT",FRT:"SHP",DAT:"MKT",GAS:"GAS",UPS:"UPS"};
+
+function buildDailyBank(BANK){
+  const by = {}; BANK.forEach(q => by[q[0]] = q);
+  const out = DAILY_NEW.slice();
+  // every Crack Spread bank question rated easy–hard can appear in the daily game
+  BANK.forEach(q => { const d = fixD(q[0], 0); if (d >= 0 && d <= 3) out.push(["cs-" + q[0], d, CS_TO_D[q[1]], q[4], q[5], q[6]]); });
+  return out.map(x => { const d = fixD(x[0], x[1]); return d === x[1] ? x : [x[0], d].concat(x.slice(2)); });
+}
+// Shared batches use the unified format [id, csCat, tA, tT, dailyDiff, q, opts, expl]
+function batchToDaily(item){ return [item[0], fixD(item[0], item[4]), CS_TO_D[item[1]] || "IND", item[5], item[6], item[7]]; }
+function batchToCS(item){ return [item[0], item[1], item[2], item[3], item[5], item[6], item[7]]; }
+if (typeof module !== "undefined") module.exports = {DAILY_NEW, DCATS, buildDailyBank, batchToDaily, batchToCS, CS_TO_D};

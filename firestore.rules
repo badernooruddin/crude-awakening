@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function owner() {
+      return signedIn() && request.auth.token.email_verified == true
+        && request.auth.token.email in ['bader.nooruddin.bot@gmail.com'];
+    }
+    function validPlayer() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['name', 'dept', 'joined', 'days'])
+        && (!('name' in d) || (d.name is string && d.name.size() <= 24))
+        && (!('dept' in d) || d.dept in ['Trading', 'Research', 'Operations', 'Engineering', 'Commercial', 'Finance', 'Other'])
+        && (!('days' in d) || d.days is map);
+    }
+
+    // Each player can only write their own record; everyone signed in can read the leaderboard.
+    match /players/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid && validPlayer();
+      allow delete: if owner();
+    }
+
+    // Players can flag a question; only the organiser can read or clear flags.
+    match /flags/{id} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['qid', 'day', 'at'])
+        && request.resource.data.qid is string && request.resource.data.qid.size() <= 40;
+      allow read, delete: if owner();
+    }
+
+    // Set swaps, settings and extra question batches: organiser only.
+    match /schedule/{id} { allow read: if signedIn(); allow write: if owner(); }
+    match /config/{id}   { allow read: if signedIn(); allow write: if owner(); }
+    match /bank/{id}     { allow read: if signedIn(); allow write: if owner(); }
+  }
+}
