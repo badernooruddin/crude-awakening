@@ -35,11 +35,13 @@ function makeFirebase(user){
   fb.auth.GoogleAuthProvider = function(){};
   return {fb, auth};
 }
+let REPO = null; // {"index.json": {...}, "b1.json": {...}}
 function win(user){
   const {fb, auth} = makeFirebase(user);
   const dom = new JSDOM(html.replace("<script>\n(function(){\n  if (!window.firebase) return;", "<script>window.firebase = window.__fb;\n(function(){\n  if (!window.firebase) return;"),
     {runScripts: "dangerously", url: "https://badernooruddin.github.io/crude-awakening/", pretendToBeVisual: true,
-     beforeParse(w){ w.__fb = fb; w.HTMLElement.prototype.scrollIntoView = () => {}; }});
+     beforeParse(w){ w.__fb = fb; w.HTMLElement.prototype.scrollIntoView = () => {};
+       w.fetch = async u => { const f = String(u).replace(/^bank\//, ""); const b = REPO && REPO[f]; return {ok: !!b, json: async () => JSON.parse(JSON.stringify(b))}; }; }});
   dom.window.__auth = auth; return dom.window;
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -75,6 +77,16 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   const B2 = win(B.__auth.currentUser); await sleep(150);
   const board = txt(B2);
   ok(board.includes("Ali") && board.includes("Sara"), "B's leaderboard shows both players");
+  // Repo question batches: organiser's bank count grows when docs/bank has a batch
+  const bankLine = async w => { click(w, '[data-a="admin"]'); await sleep(80); const m = txt(w).match(/Question bank: (\d+) easy · (\d+) medium · (\d+) hard/); return m ? m.slice(1).map(Number) : null; };
+  const OWN = () => win({uid: "g-owner", isAnonymous: false, email: "bader.nooruddin.bot@gmail.com", emailVerified: true});
+  const W0 = OWN(); await sleep(200); const before = await bankLine(W0);
+  const B2src = fs.readFileSync(__dirname + "/batch2.js", "utf8"); const BT2 = JSON.parse(B2src.slice(B2src.indexOf("{"), B2src.lastIndexOf("}") + 1));
+  const items = BT2.items.filter(x => x[4] === 1).slice(0, 5).map((x, i) => [ "t26112400" + i ].concat(x.slice(1)));
+  REPO = {"index.json": {batches: ["b20261124.json"]}, "b20261124.json": {id: "b20261124", added: "2026-11-24", items}};
+  const W = OWN(); await sleep(200);
+  const after = await bankLine(W);
+  ok(before && after && after[0] === before[0] + 5 && after[1] === before[1], "repo batch adds 5 easy questions (" + before + " -> " + after + ")");
   console.log(fail ? fail + " FAILED" : "ALL PASSED");
   process.exit(fail ? 1 : 0);
 })();

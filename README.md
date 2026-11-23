@@ -13,6 +13,12 @@ The page is built from the main game source (`src/`, plus `dbq.js` made by the m
     python3 build_gh.py          # -> docs/index.html  (TRIAL_LAUNCH=YYYY-MM-DD to change Day 1)
     npm i jsdom && node test-gh.js
 
+## New questions
+The daily top-up (a Claude scheduled task) commits each new batch as `docs/bank/bYYYYMMDD.json`
+(`{"id", "added", "items": [...]}`) and adds the file name to `docs/bank/index.json`.
+The page loads every listed batch on open; batches are appended after the built-in questions, so
+sets already played never change.
+
 ## Deploy
 - Pages serves `docs/` on `main`.
 - Security rules: `firestore.rules` (paste into Firebase console → Firestore → Rules, or `firebase deploy --only firestore:rules`).

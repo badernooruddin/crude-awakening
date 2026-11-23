@@ -77,7 +77,21 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
     add: data => ref.add(data),
     onSnapshot: (ok, err) => ref.onSnapshot(s => ok({docs: s.docs.map(x => ({id: x.id, data: () => x.data()}))}), err)
   });
-  const db = {doc: p => wrapDoc(fs.doc(p)), collection: p => wrapCol(fs.collection(p))};
+  // Extra question batches: published as static files in the repo (docs/bank/*.json) by the daily top-up,
+  // merged with any bank/* docs in Firestore. The game appends batches in (added, id) order, so past sets never change.
+  const repoBank = () => fetch("bank/index.json", {cache: "no-cache"}).then(r => r.ok ? r.json() : {batches: []})
+    .then(ix => Promise.all((ix.batches || []).map(f => fetch("bank/" + f).then(r => r.ok ? r.json() : null).catch(() => null))))
+    .then(list => list.filter(b => b && b.id && b.added && Array.isArray(b.items))).catch(() => []);
+  const bankCol = ref => ({
+    add: data => ref.add(data),
+    onSnapshot: (ok, err) => {
+      let fileDocs = [], fsDocs = [];
+      const emit = () => ok({docs: fileDocs.concat(fsDocs)});
+      repoBank().then(list => { fileDocs = list.map(b => ({id: b.id, data: () => ({added: b.added, items: b.items})})); if (list.length) emit(); });
+      return ref.onSnapshot(s => { fsDocs = s.docs.map(x => ({id: x.id, data: () => x.data()})); emit(); }, err);
+    }
+  });
+  const db = {doc: p => wrapDoc(fs.doc(p)), collection: p => p === "bank" ? bankCol(fs.collection(p)) : wrapCol(fs.collection(p))};
   const isOwner = u => !!(u && !u.isAnonymous && u.email && u.emailVerified && OWNERS.includes(u.email.toLowerCase()));
   window.FBDB = {
     start: async () => {
@@ -112,4 +126,6 @@ assert "claude.use" not in d, "Claude API still referenced"
 os.makedirs("docs", exist_ok=True)
 open("docs/index.html", "w", encoding="utf-8").write(d)
 open("docs/.nojekyll", "w").write("")
+os.makedirs("docs/bank", exist_ok=True)
+if not os.path.exists("docs/bank/index.json"): open("docs/bank/index.json", "w").write('{"batches": []}\n')
 print("docs/index.html", len(d) // 1024, "KB · LAUNCH", LAUNCH)
