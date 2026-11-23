@@ -16,11 +16,12 @@ function makeFirebase(user){
   const auth = {
     currentUser: user,
     onAuthStateChanged(cb){ setTimeout(() => cb(auth.currentUser), 1); return () => {}; },
-    async signInAnonymously(){ auth.currentUser = {uid: "anon-" + Math.random().toString(36).slice(2, 8), isAnonymous: true}; return {user: auth.currentUser}; },
+    async signInAnonymously(){ auth.currentUser = {uid: "anon-" + Math.random().toString(36).slice(2, 8), isAnonymous: true, getIdToken: async () => "t"}; return {user: auth.currentUser}; },
     async signOut(){ auth.currentUser = null; }
   };
   const docRef = p => ({
-    set: async (d, o) => { writes.push([auth.currentUser && auth.currentUser.uid, p]); if (o && o.merge && store.has(p)) deep(store.get(p), d); else store.set(p, clone(d)); notify(p); },
+    parent: {id: parentOf(p)},
+    set: async (d, o) => { if (FAILNEXT.n > 0 && p.startsWith("players/")) { FAILNEXT.n--; throw {code: FAILNEXT.code}; } writes.push([auth.currentUser && auth.currentUser.uid, p]); if (o && o.merge && store.has(p)) deep(store.get(p), d); else store.set(p, clone(d)); notify(p); },
     delete: async () => { store.delete(p); notify(p); },
     onSnapshot: (ok) => { (docL.get(p) || docL.set(p, []).get(p)).push(ok); setTimeout(() => ok(snapDoc(p)), 3); return () => {}; }
   });
@@ -35,7 +36,7 @@ function makeFirebase(user){
   fb.auth.GoogleAuthProvider = function(){};
   return {fb, auth};
 }
-let REPO = null; // {"index.json": {...}, "b1.json": {...}}
+let REPO = null; const FAILNEXT = {n: 0, code: ""}; // {"index.json": {...}, "b1.json": {...}}
 function win(user){
   const {fb, auth} = makeFirebase(user);
   const dom = new JSDOM(html.replace("<script>\n(function(){\n  if (!window.firebase) return;", "<script>window.firebase = window.__fb;\n(function(){\n  if (!window.firebase) return;"),
@@ -62,7 +63,16 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   ok($(A, "#orgfoot").textContent.includes("Organiser sign-in"), "player sees organiser sign-in link");
   ok($(O, "#orgfoot").textContent.includes("Signed in as organiser"), "owner email recognised");
   ok(!$(X, "#orgfoot").textContent.includes("Signed in as organiser"), "other Google account is not organiser");
-  await join(A, "Ali", "Trading"); await join(B, "Sara", "Research"); await join(O, "Bader", "Research");
+  // Typing in the join form is not disturbed when someone else joins
+  type(A, "in-name", "Al"); const inp = A.document.getElementById("in-name");
+  await join(B, "Sara", "Research"); await sleep(60);
+  ok(A.document.getElementById("in-name") === inp, "join form not re-drawn while typing when another player joins");
+  // A transient permission error on the first save is retried (token refresh) and succeeds
+  FAILNEXT.n = 1; FAILNEXT.code = "permission-denied";
+  await join(A, "Ali", "Trading"); await sleep(1500);
+  ok(store.get("players/" + A.__auth.currentUser.uid) && store.get("players/" + A.__auth.currentUser.uid).name === "Ali", "first save retried after a transient permission error");
+  ok(!txt(A).includes("Display name"), "A moved past the join form");
+  await join(O, "Bader", "Research");
   ok(!!$(O, '[data-a="admin"]'), "organiser sees the gear");
   ok(!$(A, '[data-a="admin"]'), "player has no gear");
   ok(txt(A).includes("#1 ·"), "trial opens at #1 (" + (txt(A).match(/#\d+ ·/) || [""])[0] + ")");

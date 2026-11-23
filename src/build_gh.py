@@ -55,6 +55,16 @@ d = must_replace(d,
     'e && (e.code === "permission-denied" || e.code === "invalid_argument") ? "That couldn\'t be saved (not allowed). Reload and try again."',
     "save error text")
 
+# 2b) Robustness for the trial (seen 23 Nov: some players had to reload while joining)
+#  - a slow first connection no longer leaves the page stuck on the error card
+#  - other players joining no longer re-draws the join form under someone who is typing
+d = must_replace(d, 'if (S.db && S.uid) subscribe(); else S.failed = true;',
+    'if (S.db && S.uid) { S.failed = false; subscribe(); } else S.failed = true;', "init subscribe")
+d = must_replace(d, 'setTimeout(() => { if (!S.ready) { S.ready = true; S.failed = true; render(); } }, 10000);',
+    'setTimeout(() => { if (!S.ready) { S.ready = true; S.failed = true; render(); } }, 25000);', "init timeout")
+d = must_replace(d, 'S.players = m; S.loaded = true; render();',
+    'const first = !S.loaded; S.players = m; S.loaded = true; const joining = !me() || !me().name || S.view === "profile"; if (first || !joining) render();', "players render")
+
 # 3) Firebase adapter: the game expects a Claude-style db (update = deep merge, set = replace)
 cfg = ",".join('%s:"%s"' % kv for kv in FB.items())
 owners = ",".join('"%s"' % e for e in OWNERS)
@@ -67,9 +77,26 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
   const OWNERS = [%(owners)s];
   firebase.initializeApp({%(cfg)s});
   const auth = firebase.auth(), fs = firebase.firestore();
+  // Log failures (no personal data) so problems players hit can be diagnosed.
+  const logErr = (stage, e) => { try { fs.collection("errs").add({stage: String(stage).slice(0, 40), code: String(e && e.code || "").slice(0, 60), msg: String(e && e.message || e).slice(0, 200), ua: navigator.userAgent.slice(0, 200), at: Date.now()}).catch(() => {}); } catch (x) {} };
+  window.addEventListener("error", e => logErr("window", e.error || e.message));
+  window.addEventListener("unhandledrejection", e => logErr("promise", e.reason));
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // Writes retry: refresh the sign-in token on auth errors, back off on network errors.
+  const retry = async (stage, fn) => {
+    for (let i = 0; ; i++) {
+      try { return await fn(); }
+      catch (e) {
+        const c = e && e.code || "";
+        if (i >= 3 || !/permission-denied|unauthenticated|unavailable|deadline-exceeded|aborted|internal|resource-exhausted/.test(c)) { logErr(stage, e); throw e; }
+        if (/permission-denied|unauthenticated/.test(c)) { if (i >= 1) { logErr(stage, e); throw e; } if (auth.currentUser) await auth.currentUser.getIdToken(true).catch(() => {}); }
+        await sleep(600 * (i + 1));
+      }
+    }
+  };
   const wrapDoc = ref => ({
-    set: data => ref.set(data),
-    update: patch => ref.set(patch, {merge: true}),   // Claude db update = deep merge
+    set: data => retry("set " + ref.parent.id, () => ref.set(data)),
+    update: patch => retry("update " + ref.parent.id, () => ref.set(patch, {merge: true})),   // Claude db update = deep merge
     delete: () => ref.delete(),
     onSnapshot: (ok, err) => ref.onSnapshot(s => ok({id: s.id, exists: s.exists, data: () => s.data()}), err)
   });
@@ -96,7 +123,10 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
   window.FBDB = {
     start: async () => {
       let u = await new Promise(res => { const off = auth.onAuthStateChanged(x => { off(); res(x); }); });
-      if (!u) u = (await auth.signInAnonymously()).user;
+      for (let i = 0; !u; i++) {
+        try { u = (await auth.signInAnonymously()).user; }
+        catch (e) { if (i >= 3) { logErr("signin", e); throw e; } await sleep(1000 * (i + 1)); }
+      }
       paintOrg(u);
       return {db, uid: u.uid, owner: isOwner(u)};
     }

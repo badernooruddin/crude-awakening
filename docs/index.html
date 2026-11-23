@@ -118,9 +118,26 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
   const OWNERS = ["bader.nooruddin.bot@gmail.com"];
   firebase.initializeApp({apiKey:"AIzaSyBnHXmY96GrebuaN17Hwrd4gxPRjKCjDls",authDomain:"crude-awakening-trial.firebaseapp.com",projectId:"crude-awakening-trial",storageBucket:"crude-awakening-trial.firebasestorage.app",messagingSenderId:"182339202148",appId:"1:182339202148:web:22dd8f5730760103650371"});
   const auth = firebase.auth(), fs = firebase.firestore();
+  // Log failures (no personal data) so problems players hit can be diagnosed.
+  const logErr = (stage, e) => { try { fs.collection("errs").add({stage: String(stage).slice(0, 40), code: String(e && e.code || "").slice(0, 60), msg: String(e && e.message || e).slice(0, 200), ua: navigator.userAgent.slice(0, 200), at: Date.now()}).catch(() => {}); } catch (x) {} };
+  window.addEventListener("error", e => logErr("window", e.error || e.message));
+  window.addEventListener("unhandledrejection", e => logErr("promise", e.reason));
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // Writes retry: refresh the sign-in token on auth errors, back off on network errors.
+  const retry = async (stage, fn) => {
+    for (let i = 0; ; i++) {
+      try { return await fn(); }
+      catch (e) {
+        const c = e && e.code || "";
+        if (i >= 3 || !/permission-denied|unauthenticated|unavailable|deadline-exceeded|aborted|internal|resource-exhausted/.test(c)) { logErr(stage, e); throw e; }
+        if (/permission-denied|unauthenticated/.test(c)) { if (i >= 1) { logErr(stage, e); throw e; } if (auth.currentUser) await auth.currentUser.getIdToken(true).catch(() => {}); }
+        await sleep(600 * (i + 1));
+      }
+    }
+  };
   const wrapDoc = ref => ({
-    set: data => ref.set(data),
-    update: patch => ref.set(patch, {merge: true}),   // Claude db update = deep merge
+    set: data => retry("set " + ref.parent.id, () => ref.set(data)),
+    update: patch => retry("update " + ref.parent.id, () => ref.set(patch, {merge: true})),   // Claude db update = deep merge
     delete: () => ref.delete(),
     onSnapshot: (ok, err) => ref.onSnapshot(s => ok({id: s.id, exists: s.exists, data: () => s.data()}), err)
   });
@@ -147,7 +164,10 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
   window.FBDB = {
     start: async () => {
       let u = await new Promise(res => { const off = auth.onAuthStateChanged(x => { off(); res(x); }); });
-      if (!u) u = (await auth.signInAnonymously()).user;
+      for (let i = 0; !u; i++) {
+        try { u = (await auth.signInAnonymously()).user; }
+        catch (e) { if (i >= 3) { logErr("signin", e); throw e; } await sleep(1000 * (i + 1)); }
+      }
       paintOrg(u);
       return {db, uid: u.uid, owner: isOwner(u)};
     }
@@ -958,10 +978,10 @@ const S = {
     }
   } catch(e){}
   S.ready = true;
-  if (S.db && S.uid) subscribe(); else S.failed = true;
+  if (S.db && S.uid) { S.failed = false; subscribe(); } else S.failed = true;
   render();
 })();
-setTimeout(() => { if (!S.ready) { S.ready = true; S.failed = true; render(); } }, 10000);
+setTimeout(() => { if (!S.ready) { S.ready = true; S.failed = true; render(); } }, 25000);
 
 function subscribe(){
   let got = false;
@@ -969,7 +989,7 @@ function subscribe(){
   S.db.collection("players").onSnapshot(snap => {
     got = true; clearTimeout(t);
     const m = {}; snap.docs.forEach(d => { const x = d.data(); if (x) m[d.id] = Object.assign({id: d.id}, x); });
-    S.players = m; S.loaded = true; render();
+    const first = !S.loaded; S.players = m; S.loaded = true; const joining = !me() || !me().name || S.view === "profile"; if (first || !joining) render();
   }, e => toast("Lost connection (" + e.code + ")."));
   S.db.collection("bank").onSnapshot(snap => {
     let changed = false;

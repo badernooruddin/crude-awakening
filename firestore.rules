@@ -29,6 +29,14 @@ service cloud.firestore {
       allow read, delete: if owner();
     }
 
+    // Error reports from players' browsers (no personal data); organiser reads them.
+    match /errs/{id} {
+      allow create: if signedIn() && request.resource.data.keys().hasOnly(['stage', 'code', 'msg', 'ua', 'at'])
+        && request.resource.data.msg is string && request.resource.data.msg.size() <= 200
+        && request.resource.data.ua is string && request.resource.data.ua.size() <= 200;
+      allow read, delete: if owner();
+    }
+
     // Set swaps, settings and extra question batches: organiser only.
     match /schedule/{id} { allow read: if signedIn(); allow write: if owner(); }
     match /config/{id}   { allow read: if signedIn(); allow write: if owner(); }
