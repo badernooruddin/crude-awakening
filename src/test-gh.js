@@ -23,6 +23,8 @@ function makeFirebase(user){
     parent: {id: parentOf(p)},
     set: async (d, o) => { if (FAILNEXT.n > 0 && p.startsWith("players/")) { FAILNEXT.n--; throw {code: FAILNEXT.code}; } writes.push([auth.currentUser && auth.currentUser.uid, p]); if (o && o.merge && store.has(p)) deep(store.get(p), d); else store.set(p, clone(d)); notify(p); },
     delete: async () => { store.delete(p); notify(p); },
+    get: async () => snapDoc(p),
+    update: async d => { if (!store.has(p)) throw {code: "not-found"}; Object.assign(store.get(p), clone(d)); notify(p); },
     onSnapshot: (ok) => { (docL.get(p) || docL.set(p, []).get(p)).push(ok); setTimeout(() => ok(snapDoc(p)), 3); return () => {}; }
   });
   const fsx = {
@@ -75,7 +77,10 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   await join(O, "Bader", "Research");
   ok(!!$(O, '[data-a="admin"]'), "organiser sees the gear");
   ok(!$(A, '[data-a="admin"]'), "player has no gear");
-  ok(txt(A).includes("#1 ·"), "trial opens at #1 (" + (txt(A).match(/#\d+ ·/) || [""])[0] + ")");
+  const LA = (fs.readFileSync(__dirname + "/docs/index.html", "utf8").match(/const LAUNCH = "([\d-]+)"/) || [])[1];
+  const lon = new Intl.DateTimeFormat("en-CA", {timeZone: "Europe/London"}).format(new Date());
+  const expect = Math.round((Date.parse(lon) - Date.parse(LA)) / 864e5) + 1;
+  ok(txt(A).includes("#" + expect + " ·"), "day number counts from the trial launch (#" + expect + ")");
   ok(await playAll(A, i => i % 4), "player A plays 10 questions");
   ok(await playAll(B, () => 0), "player B plays 10 questions");
   await sleep(200);
@@ -84,6 +89,7 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   ok(day && day.done && day.a.length === 10 && Array.isArray(day.ids) && day.ids.length === 10, "A's day saved with 10 answers and ids (deep merge kept earlier fields)");
   ok(docA && docA.name === "Ali" && docA.dept === "Trading" && docA.joined, "A's profile kept after answer updates");
   ok(writes.every(([u, p]) => !p.startsWith("players/") || p === "players/" + u), "players only ever wrote their own doc");
+  writes.length = 0;
   const B2 = win(B.__auth.currentUser); await sleep(150);
   const board = txt(B2);
   ok(board.includes("Ali") && board.includes("Sara"), "B's leaderboard shows both players");
@@ -97,6 +103,30 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   const W = OWN(); await sleep(200);
   const after = await bankLine(W);
   ok(before && after && after[0] === before[0] + 5 && after[1] === before[1], "repo batch adds 5 easy questions (" + before + " -> " + after + ")");
+  // Link devices: Bader plays on browser P1, then again as a separate player on P2; linking merges them
+  const P1 = win(null), P2 = win(null); await sleep(150);
+  await join(P1, "Ban", "Research"); await join(P2, "Ban", "Research"); await sleep(60);
+  const u1 = P1.__auth.currentUser.uid, u2 = P2.__auth.currentUser.uid;
+  store.get("players/" + u1).days = {"2026-11-22": {done: true, sc: 5000, n: 5, a: []}};
+  store.get("players/" + u2).days = {"2026-11-22": {done: true, sc: 1, n: 1, a: []}, "2026-11-21": {done: true, sc: 7000, n: 7, a: []}};
+  click(P1, "#lnkopen"); await sleep(80); click(P1, "#lnkget"); await sleep(80);
+  const code = P1.document.getElementById("lnkcode").textContent.replace(/\s/g, "");
+  ok(/^[A-Z2-9]{8}$/.test(code), "device 1 shows an 8-character code (" + code + ")");
+  click(P2, "#lnkopen"); await sleep(80); P2.document.getElementById("lnkin").value = code.toLowerCase(); click(P2, "#lnkuse"); await sleep(400);
+  const T = store.get("players/" + u1);
+  ok(T.uids && T.uids.includes(u2), "device 2 added to the player's linked browsers");
+  ok(T.days["2026-11-22"].sc === 5000 && T.days["2026-11-21"] && T.days["2026-11-21"].sc === 7000, "device 2's extra day moved across, existing day kept");
+  ok(!store.has("players/" + u2), "duplicate entry removed");
+  ok(store.get("devices/" + u2) && store.get("devices/" + u2).pid === u1, "device 2 now plays as the same player");
+  const P2b = win(P2.__auth.currentUser); await sleep(200);
+  ok(!P2b.document.getElementById("in-name") && txt(P2b).includes("Ban"), "after reload device 2 is signed in as Ban, no join form");
+  ok(Object.values(store).length === 0 || [...store.keys()].filter(k => k.startsWith("players/") && store.get(k).name === "Ban").length === 1, "only one Ban on the leaderboard");
+  ok(await playAll(P2b, () => 0), "linked device plays today's set");
+  await sleep(200);
+  ok(store.get("players/" + u1).days[lon] && store.get("players/" + u1).days[lon].done, "linked device's game saved to the shared record");
+  // a wrong code is refused
+  const P3 = win(null); await sleep(150); click(P3, "#lnkopen"); await sleep(60); P3.document.getElementById("lnkin").value = "ZZZZZZZZ"; click(P3, "#lnkuse"); await sleep(200);
+  ok(P3.document.getElementById("lnkmsg").textContent.includes("isn't valid"), "unknown code is refused with a clear message");
   console.log(fail ? fail + " FAILED" : "ALL PASSED");
   process.exit(fail ? 1 : 0);
 })();

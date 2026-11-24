@@ -8,17 +8,61 @@ service cloud.firestore {
     }
     function validPlayer() {
       let d = request.resource.data;
-      return d.keys().hasOnly(['name', 'dept', 'joined', 'days'])
+      return d.keys().hasOnly(['name', 'dept', 'joined', 'days', 'uids', 'lastLink'])
         && (!('name' in d) || (d.name is string && d.name.size() <= 24))
         && (!('dept' in d) || d.dept in ['Trading', 'Research', 'Operations', 'Engineering', 'Commercial', 'Finance', 'Other'])
         && (!('days' in d) || d.days is map);
     }
 
+    // Browsers linked to the same player (anonymous sign-in is per browser).
+    function members(pid) {
+      return get(/databases/$(database)/documents/players/$(pid)).data.get('uids', []);
+    }
+    function isMember(pid) {
+      return request.auth.uid == pid || request.auth.uid in members(pid);
+    }
+    // A new browser joins a player with a valid, unexpired link code made by that player.
+    function linkJoin(pid) {
+      let code = request.resource.data.lastLink;
+      let before = resource.data.get('uids', []);
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uids', 'lastLink'])
+        && code is string && code.size() == 8
+        && exists(/databases/$(database)/documents/links/$(code))
+        && get(/databases/$(database)/documents/links/$(code)).data.pid == pid
+        && get(/databases/$(database)/documents/links/$(code)).data.exp > request.time.toMillis()
+        && request.resource.data.uids == before.concat([request.auth.uid])
+        && before.size() < 10;
+    }
+
     // Each player can only write their own record; everyone signed in can read the leaderboard.
     match /players/{uid} {
       allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == uid && validPlayer();
-      allow delete: if owner();
+      allow create: if signedIn() && request.auth.uid == uid && validPlayer()
+        && !('uids' in request.resource.data) && !('lastLink' in request.resource.data);
+      allow update: if signedIn() && validPlayer() && (
+        ((request.auth.uid == uid || request.auth.uid in resource.data.get('uids', []))
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uids', 'lastLink']))
+        || linkJoin(uid));
+      allow delete: if owner() || (signedIn() && request.auth.uid == uid);
+    }
+
+    // Link codes: made by a player, read by exact code only (never listed), valid 15 minutes.
+    match /links/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && code.size() == 8
+        && request.resource.data.keys().hasOnly(['pid', 'exp'])
+        && request.resource.data.pid is string && isMember(request.resource.data.pid)
+        && request.resource.data.exp is int && request.resource.data.exp <= request.time.toMillis() + 1800000;
+    }
+
+    // Which player this browser plays as.
+    match /devices/{duid} {
+      allow get: if signedIn() && request.auth.uid == duid;
+      allow create, update: if signedIn() && request.auth.uid == duid
+        && request.resource.data.keys().hasOnly(['pid'])
+        && request.resource.data.pid is string && isMember(request.resource.data.pid);
+      allow delete: if signedIn() && request.auth.uid == duid;
     }
 
     // Players can flag a question; only the organiser can read or clear flags.
