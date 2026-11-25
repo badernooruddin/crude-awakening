@@ -4,7 +4,7 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function owner() {
       return signedIn() && request.auth.token.email_verified == true
-        && request.auth.token.email in ['bader.nooruddin.bot@gmail.com'];
+        && request.auth.token.email in ['bader.nooruddin.bot@gmail.com', 'bader.nooruddin@gmail.com'];
     }
     function validPlayer() {
       let d = request.resource.data;

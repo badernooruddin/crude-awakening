@@ -7,7 +7,7 @@ Run python3 rebuild.py first (it writes dbq.js), then python3 build_gh.py.
 import os, re, sys
 
 LAUNCH = os.environ.get("TRIAL_LAUNCH", "2026-11-23")   # trial Day 1 (London date)
-OWNERS = ["bader.nooruddin.bot@gmail.com"]               # organiser Google account(s)
+OWNERS = ["bader.nooruddin.bot@gmail.com", "bader.nooruddin@gmail.com"]               # organiser Google account(s)
 FB = {
     "apiKey": "AIzaSyBnHXmY96GrebuaN17Hwrd4gxPRjKCjDls",
     "authDomain": "crude-awakening-trial.firebaseapp.com",
