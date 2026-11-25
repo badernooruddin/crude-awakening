@@ -42,7 +42,8 @@ service cloud.firestore {
       allow update: if signedIn() && validPlayer() && (
         ((request.auth.uid == uid || request.auth.uid in resource.data.get('uids', []))
           && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['uids', 'lastLink']))
-        || linkJoin(uid));
+        || linkJoin(uid)
+        || owner());
       allow delete: if owner() || (signedIn() && request.auth.uid == uid);
     }
 

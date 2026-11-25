@@ -128,7 +128,14 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
         catch (e) { if (i >= 3) { logErr("signin", e); throw e; } await sleep(1000 * (i + 1)); }
       }
       AUTHUID = u.uid; PID = u.uid;
-      try { const dv = await fs.doc("devices/" + u.uid).get(); if (dv.exists && dv.data().pid) PID = dv.data().pid; } catch (e) { logErr("device", e); }
+      try {
+        const dv = await fs.doc("devices/" + u.uid).get();
+        if (dv.exists && dv.data().pid) PID = dv.data().pid;
+        else {
+          const own = await fs.doc("players/" + u.uid).get();
+          if (!own.exists) { const q = await fs.collection("players").where("uids", "array-contains", u.uid).limit(1).get(); if (!q.empty) PID = q.docs[0].id; }
+        }
+      } catch (e) { logErr("device", e); }
       paintOrg(u);
       return {db, uid: PID, owner: isOwner(u)};
     }
@@ -137,9 +144,59 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
   function paintOrg(u){
     const el = document.getElementById("orgfoot"); if (!el) return;
     const link = '<a href="#" id="lnkopen">Play on another phone or computer</a><br><br>';
-    if (isOwner(u)) el.innerHTML = link + 'Signed in as organiser · <a href="#" id="orgout">Sign out</a>';
+    if (isOwner(u)) el.innerHTML = link + '<a href="#" id="mrgopen">Merge duplicate players</a><br><br>Signed in as organiser · <a href="#" id="orgout">Sign out</a>';
     else el.innerHTML = link + '<a href="#" id="orgin">Organiser sign-in</a>';
   }
+  // ---- Organiser: merge duplicate players into one record ----
+  let MRG = [];
+  const dayCount = x => Object.keys(x.days || {}).filter(k => x.days[k]).length;
+  const lastDay = x => Object.keys(x.days || {}).filter(k => x.days[k]).sort().pop() || "-";
+  async function openMerge(){
+    dialog('<b>Merge duplicate players</b><p class="note">Loading players…</p>');
+    try {
+      const s = await fs.collection("players").get();
+      MRG = s.docs.map(d => Object.assign({id: d.id}, d.data())).filter(x => x.name)
+        .sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : (a.joined || 0) - (b.joined || 0));
+      let h = '<b>Merge duplicate players</b><p class="note" style="margin:8px 0 10px">Tick every entry that is the same person (2 or more), then merge. All their days are combined into the one you keep (if two entries played the same day, the higher score is kept), the others are removed, and their browsers become that player.</p>';
+      h += '<div style="max-height:45vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 8px">' + MRG.map((x, i) =>
+        '<label style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)"><input type="checkbox" class="mrgck" data-i="' + i + '" style="width:20px;height:20px"><span><b>' + esc(x.name) + '</b> · ' + esc(x.dept || "") + '<br><span class="note">' + dayCount(x) + ' day(s) · last ' + lastDay(x) + ' · joined ' + (x.joined ? new Date(x.joined).toISOString().slice(0, 10) : "?") + '</span></span></label>').join("") + '</div>';
+      h += '<p class="note" style="margin:12px 0 6px">Keep which name and team?</p><select class="in" id="mrgkeep"><option value="">Tick entries first</option></select>';
+      h += '<button class="btn" id="mrggo" style="margin-top:10px">Merge</button><p class="note" id="mrgmsg" style="margin-top:8px"></p>';
+      dialog(h);
+    } catch (e) { logErr("merge list", e); dialog('<b>Merge duplicate players</b><p class="note">Couldn\'t load players. Check your connection.</p>'); }
+  }
+  function mrgPicked(){ return Array.from(document.querySelectorAll(".mrgck")).filter(c => c.checked).map(c => MRG[+c.dataset.i]); }
+  function mrgRefresh(){
+    const sel = document.getElementById("mrgkeep"); if (!sel) return;
+    const p = mrgPicked();
+    sel.innerHTML = p.length ? p.map(x => '<option value="' + esc(x.id) + '">' + esc(x.name) + ' · ' + esc(x.dept || "") + ' (' + dayCount(x) + ' day(s), last ' + lastDay(x) + ')</option>').join("") : '<option value="">Tick entries first</option>';
+  }
+  async function doMerge(){
+    const msg = document.getElementById("mrgmsg"), btn = document.getElementById("mrggo");
+    const p = mrgPicked(), keepId = document.getElementById("mrgkeep").value;
+    if (p.length < 2 || !keepId) { msg.textContent = "Tick at least two entries."; return; }
+    const keep = p.find(x => x.id === keepId), others = p.filter(x => x.id !== keepId);
+    btn.disabled = true; msg.textContent = "Merging…";
+    try {
+      const K = (await fs.doc("players/" + keepId).get()).data() || {};
+      const days = Object.assign({}, K.days || {}), uids = new Set(K.uids || []);
+      for (const o of others) {
+        const O = (await fs.doc("players/" + o.id).get()).data() || {};
+        Object.keys(O.days || {}).forEach(k => {
+          const a = days[k], b = O.days[k]; if (!b) return;
+          if (!a || ((b.done ? 1 : 0) > (a.done ? 1 : 0)) || ((b.done ? 1 : 0) === (a.done ? 1 : 0) && (b.sc || 0) > (a.sc || 0))) days[k] = b;
+        });
+        uids.add(o.id); (O.uids || []).forEach(x => uids.add(x));
+      }
+      uids.delete(keepId);
+      await retry("merge keep", () => fs.doc("players/" + keepId).update({days, uids: Array.from(uids).slice(0, 10)}));
+      for (const o of others) await retry("merge remove", () => fs.doc("players/" + o.id).delete());
+      msg.textContent = "Merged " + p.length + " entries into " + keep.name + ". Reloading…";
+      setTimeout(() => location.reload(), 900);
+    } catch (e) { btn.disabled = false; logErr("merge", e); msg.textContent = "Merge failed (" + (e && e.code || "error") + "). Nothing was removed unless the first step finished; try again."; }
+  }
+  document.addEventListener("change", e => { if (e.target && e.target.classList && e.target.classList.contains("mrgck")) mrgRefresh(); });
+
   // ---- Link devices: one player record across browsers (anonymous sign-in is per browser) ----
   const ABC = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
   const newCode = () => { const a = new Uint32Array(8); crypto.getRandomValues(a); return Array.from(a, x => ABC[x %% ABC.length]).join(""); };
@@ -209,6 +266,8 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
     if (t && t.id === "lnkclose") { const o = document.getElementById("lnk"); if (o) o.remove(); }
     if (t && t.id === "lnkget") { getCode(); }
     if (t && t.id === "lnkuse") { useCode(); }
+    if (t && t.id === "mrgopen") { e.preventDefault(); openMerge(); }
+    if (t && t.id === "mrggo") { doMerge(); }
   });
 })();
 </script>

@@ -31,6 +31,8 @@ function makeFirebase(user){
     doc: p => docRef(p),
     collection: c => ({
       add: async d => { const p = c + "/" + Math.random().toString(36).slice(2); await docRef(p).set(d); },
+      get: async () => snapCol(c),
+      where: (f, op, v) => ({limit: () => ({get: async () => { const docs = snapCol(c).docs.filter(d => { const x = d.data(); return op === "array-contains" && Array.isArray(x[f]) && x[f].includes(v); }); return {empty: !docs.length, docs}; }})}),
       onSnapshot: (ok) => { (colL.get(c) || colL.set(c, []).get(c)).push(ok); setTimeout(() => ok(snapCol(c)), 3); return () => {}; }
     })
   };
@@ -124,6 +126,29 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   ok(await playAll(P2b, () => 0), "linked device plays today's set");
   await sleep(200);
   ok(store.get("players/" + u1).days[lon] && store.get("players/" + u1).days[lon].done, "linked device's game saved to the shared record");
+  // Organiser merge: three "Bo" entries from browsers that forgot the player
+  const Q1 = win(null), Q2 = win(null), Q3 = win(null); await sleep(150);
+  for (const w of [Q1, Q2, Q3]) await join(w, "Bo", "Research");
+  await sleep(60);
+  const q = [Q1, Q2, Q3].map(w => w.__auth.currentUser.uid);
+  store.get("players/" + q[0]).days = {"2026-11-20": {done: true, sc: 8430, n: 8, a: []}};
+  store.get("players/" + q[1]).days = {"2026-11-21": {done: true, sc: 7705, n: 7, a: []}, "2026-11-20": {done: true, sc: 100, n: 1, a: []}};
+  store.get("players/" + q[2]).days = {"2026-11-22": {done: true, sc: 11681, n: 9, a: []}};
+  const OW = OWN(); await sleep(200);
+  ok(!!OW.document.getElementById("mrgopen"), "organiser sees the merge tool");
+  ok(!A.document.getElementById("mrgopen"), "players don't see the merge tool");
+  click(OW, "#mrgopen"); await sleep(150);
+  const boxes = [...OW.document.querySelectorAll(".mrgck")].filter(c => c.parentElement.textContent.includes("Bo ·"));
+  ok(boxes.length === 3, "merge list shows all three Bo entries");
+  boxes.forEach(c => { c.checked = true; c.dispatchEvent(new OW.Event("change", {bubbles: true})); });
+  const sel = OW.document.getElementById("mrgkeep"); sel.value = q[0];
+  click(OW, "#mrggo"); await sleep(400);
+  const KB = store.get("players/" + q[0]);
+  ok(KB && KB.days["2026-11-20"].sc === 8430 && KB.days["2026-11-21"].sc === 7705 && KB.days["2026-11-22"].sc === 11681, "all three days combined, higher score kept on a clash");
+  ok(!store.has("players/" + q[1]) && !store.has("players/" + q[2]), "the other two entries removed");
+  ok(KB.uids.includes(q[1]) && KB.uids.includes(q[2]), "their browsers are recorded on the kept player");
+  const Q3b = win(Q3.__auth.currentUser); await sleep(250);
+  ok(!Q3b.document.getElementById("in-name") && txt(Q3b).includes("Bo"), "a merged browser comes back as the kept player");
   // a wrong code is refused
   const P3 = win(null); await sleep(150); click(P3, "#lnkopen"); await sleep(60); P3.document.getElementById("lnkin").value = "ZZZZZZZZ"; click(P3, "#lnkuse"); await sleep(200);
   ok(P3.document.getElementById("lnkmsg").textContent.includes("isn't valid"), "unknown code is refused with a clear message");
