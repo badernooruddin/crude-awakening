@@ -7,7 +7,8 @@ Run python3 rebuild.py first (it writes dbq.js), then python3 build_gh.py.
 import os, re, sys
 
 LAUNCH = os.environ.get("TRIAL_LAUNCH", "2026-11-23")   # trial Day 1 (London date)
-OWNERS = ["bader.nooruddin.bot@gmail.com", "bader.nooruddin@gmail.com"]               # organiser Google account(s)
+# Organisers are defined only in firestore.rules (owner()); the page asks the database whether the
+# signed-in Google account passes that rule, so no organiser address is published in the page.
 FB = {
     "apiKey": "AIzaSyBnHXmY96GrebuaN17Hwrd4gxPRjKCjDls",
     "authDomain": "crude-awakening-trial.firebaseapp.com",
@@ -65,16 +66,19 @@ d = must_replace(d, 'setTimeout(() => { if (!S.ready) { S.ready = true; S.failed
 d = must_replace(d, 'S.players = m; S.loaded = true; render();',
     'const first = !S.loaded; S.players = m; S.loaded = true; const joining = !me() || !me().name || S.view === "profile"; if (first || !joining) render();', "players render")
 
+# 2c) One player per name: a name already in use can't be taken by another browser (stops replaying the day
+#     under the same name from a new device); the player is pointed to device linking instead.
+_DEPT = '      if (!S.edit.dept) return toast("Pick your team.");'
+d = must_replace(d, _DEPT, _DEPT + "\n" + r("gh_unique_name.js").rstrip("\n"), "unique name")
+
 # 3) Firebase adapter: the game expects a Claude-style db (update = deep merge, set = replace)
 cfg = ",".join('%s:"%s"' % kv for kv in FB.items())
-owners = ",".join('"%s"' % e for e in OWNERS)
 ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-firestore-compat.js"></script>
 <script>
 (function(){
   if (!window.firebase) return;
-  const OWNERS = [%(owners)s];
   firebase.initializeApp({%(cfg)s});
   const auth = firebase.auth(), fs = firebase.firestore();
   // Log failures (no personal data) so problems players hit can be diagnosed.
@@ -119,7 +123,10 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
     }
   });
   const db = {doc: p => wrapDoc(fs.doc(p)), collection: p => p === "bank" ? bankCol(fs.collection(p)) : wrapCol(fs.collection(p))};
-  const isOwner = u => !!(u && !u.isAnonymous && u.email && u.emailVerified && OWNERS.includes(u.email.toLowerCase()));
+  // Organiser = a Google account that passes owner() in the security rules; probe with an organiser-only read.
+  let OWNER = false;
+  const checkOwner = async u => { if (!u || u.isAnonymous) return false; try { await fs.collection("flags").limit(1).get(); return true; } catch (e) { return false; } };
+  const isOwner = () => OWNER;
   window.FBDB = {
     start: async () => {
       let u = await new Promise(res => { const off = auth.onAuthStateChanged(x => { off(); res(x); }); });
@@ -136,6 +143,7 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
           if (!own.exists) { const q = await fs.collection("players").where("uids", "array-contains", u.uid).limit(1).get(); if (!q.empty) PID = q.docs[0].id; }
         }
       } catch (e) { logErr("device", e); }
+      OWNER = await checkOwner(u);
       paintOrg(u);
       return {db, uid: PID, owner: isOwner(u)};
     }
@@ -157,7 +165,7 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
       const s = await fs.collection("players").get();
       MRG = s.docs.map(d => Object.assign({id: d.id}, d.data())).filter(x => x.name)
         .sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : (a.joined || 0) - (b.joined || 0));
-      let h = '<b>Merge duplicate players</b><p class="note" style="margin:8px 0 10px">Tick every entry that is the same person (2 or more), then merge. All their days are combined into the one you keep (if two entries played the same day, the higher score is kept), the others are removed, and their browsers become that player.</p>';
+      let h = '<b>Merge duplicate players</b><p class="note" style="margin:8px 0 10px">Tick every entry that is the same person (2 or more), then merge. All their days are combined into the one you keep (if two entries played the same day, the first attempt counts), the others are removed, and their browsers become that player.</p>';
       h += '<div style="max-height:45vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 8px">' + MRG.map((x, i) =>
         '<label style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)"><input type="checkbox" class="mrgck" data-i="' + i + '" style="width:20px;height:20px"><span><b>' + esc(x.name) + '</b> · ' + esc(x.dept || "") + '<br><span class="note">' + dayCount(x) + ' day(s) · last ' + lastDay(x) + ' · joined ' + (x.joined ? new Date(x.joined).toISOString().slice(0, 10) : "?") + '</span></span></label>').join("") + '</div>';
       h += '<p class="note" style="margin:12px 0 6px">Keep which name and team?</p><select class="in" id="mrgkeep"><option value="">Tick entries first</option></select>';
@@ -184,7 +192,8 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
         const O = (await fs.doc("players/" + o.id).get()).data() || {};
         Object.keys(O.days || {}).forEach(k => {
           const a = days[k], b = O.days[k]; if (!b) return;
-          if (!a || ((b.done ? 1 : 0) > (a.done ? 1 : 0)) || ((b.done ? 1 : 0) === (a.done ? 1 : 0) && (b.sc || 0) > (a.sc || 0))) days[k] = b;
+          // same day played twice: keep the first attempt (earliest start), so a replay never counts
+          if (!a || (b.st && (!a.st || b.st < a.st))) days[k] = b;
         });
         uids.add(o.id); (O.uids || []).forEach(x => uids.add(x));
       }
@@ -271,7 +280,7 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
   });
 })();
 </script>
-''' % {"sdk": SDK, "owners": owners, "cfg": cfg}
+''' % {"sdk": SDK, "cfg": cfg}
 FOOT = '<div class="wrap" id="app"></div>\n<div id="orgfoot" style="text-align:center;font-size:12px;opacity:.55;margin:18px 0 28px"></div>\n'
 d = must_replace(d, '<div class="wrap" id="app"></div>\n', FOOT + ADAPTER, "app div")
 d = must_replace(d, '<style>', '<style>\n#orgfoot a{color:inherit}', "style tag")

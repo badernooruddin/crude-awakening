@@ -32,6 +32,8 @@ function makeFirebase(user){
     collection: c => ({
       add: async d => { const p = c + "/" + Math.random().toString(36).slice(2); await docRef(p).set(d); },
       get: async () => snapCol(c),
+      // flags are organiser-only in the rules: the mock lets only the test organiser account read them
+      limit: () => ({get: async () => { const u = auth.currentUser; if (c === "flags" && !(u && !u.isAnonymous && u.email === ORGANISER)) throw {code: "permission-denied"}; return snapCol(c); }}),
       where: (f, op, v) => ({limit: () => ({get: async () => { const docs = snapCol(c).docs.filter(d => { const x = d.data(); return op === "array-contains" && Array.isArray(x[f]) && x[f].includes(v); }); return {empty: !docs.length, docs}; }})}),
       onSnapshot: (ok) => { (colL.get(c) || colL.set(c, []).get(c)).push(ok); setTimeout(() => ok(snapCol(c)), 3); return () => {}; }
     })
@@ -40,6 +42,7 @@ function makeFirebase(user){
   fb.auth.GoogleAuthProvider = function(){};
   return {fb, auth};
 }
+const ORGANISER = "organiser@example.com"; // stands in for an account listed in firestore.rules owner()
 let REPO = null; const FAILNEXT = {n: 0, code: ""}; // {"index.json": {...}, "b1.json": {...}}
 function win(user){
   const {fb, auth} = makeFirebase(user);
@@ -60,7 +63,7 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
 
 (async () => {
   const A = win(null), B = win(null);
-  const O = win({uid: "g-owner", isAnonymous: false, email: "bader.nooruddin.bot@gmail.com", emailVerified: true});
+  const O = win({uid: "g-owner", isAnonymous: false, email: ORGANISER, emailVerified: true});
   const X = win({uid: "g-other", isAnonymous: false, email: "someone@gmail.com", emailVerified: true});
   await sleep(120);
   ok(!txt(A).includes("leaderboard. Check"), "anonymous player connects");
@@ -97,7 +100,7 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   ok(board.includes("Ali") && board.includes("Sara"), "B's leaderboard shows both players");
   // Repo question batches: organiser's bank count grows when docs/bank has a batch
   const bankLine = async w => { click(w, '[data-a="admin"]'); await sleep(80); const m = txt(w).match(/Question bank: (\d+) easy · (\d+) medium · (\d+) hard/); return m ? m.slice(1).map(Number) : null; };
-  const OWN = () => win({uid: "g-owner", isAnonymous: false, email: "bader.nooruddin.bot@gmail.com", emailVerified: true});
+  const OWN = () => win({uid: "g-owner", isAnonymous: false, email: ORGANISER, emailVerified: true});
   const W0 = OWN(); await sleep(200); const before = await bankLine(W0);
   const B2src = fs.readFileSync(__dirname + "/batch2.js", "utf8"); const BT2 = JSON.parse(B2src.slice(B2src.indexOf("{"), B2src.lastIndexOf("}") + 1));
   const items = BT2.items.filter(x => x[4] === 1).slice(0, 5).map((x, i) => [ "t26112400" + i ].concat(x.slice(1)));
@@ -107,7 +110,11 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   ok(before && after && after[0] === before[0] + 5 && after[1] === before[1], "repo batch adds 5 easy questions (" + before + " -> " + after + ")");
   // Link devices: Bader plays on browser P1, then again as a separate player on P2; linking merges them
   const P1 = win(null), P2 = win(null); await sleep(150);
-  await join(P1, "Ban", "Research"); await join(P2, "Ban", "Research"); await sleep(60);
+  await join(P1, "Ban", "Research"); await sleep(60);
+  // the same name can't be taken by a second browser
+  type(P2, "in-name", " ban "); click(P2, '[data-a="dept"][data-v="Research"]'); click(P2, '[data-a="save-profile"]'); await sleep(60);
+  ok(!store.has("players/" + P2.__auth.currentUser.uid) && P2.document.body.textContent.includes("is already playing"), "a second browser can't join under a name already in use");
+  await join(P2, "Ban phone", "Research"); await sleep(60);
   const u1 = P1.__auth.currentUser.uid, u2 = P2.__auth.currentUser.uid;
   store.get("players/" + u1).days = {"2026-11-22": {done: true, sc: 5000, n: 5, a: []}};
   store.get("players/" + u2).days = {"2026-11-22": {done: true, sc: 1, n: 1, a: []}, "2026-11-21": {done: true, sc: 7000, n: 7, a: []}};
@@ -128,11 +135,13 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   ok(store.get("players/" + u1).days[lon] && store.get("players/" + u1).days[lon].done, "linked device's game saved to the shared record");
   // Organiser merge: three "Bo" entries from browsers that forgot the player
   const Q1 = win(null), Q2 = win(null), Q3 = win(null); await sleep(150);
-  for (const w of [Q1, Q2, Q3]) await join(w, "Bo", "Research");
+  await join(Q1, "Bo", "Research"); await sleep(60);
+  for (const w of [Q2, Q3]) { store.set("players/" + w.__auth.currentUser.uid, {name: "Bo", dept: "Research", joined: Date.now(), days: {}}); }
   await sleep(60);
   const q = [Q1, Q2, Q3].map(w => w.__auth.currentUser.uid);
   store.get("players/" + q[0]).days = {"2026-11-20": {done: true, sc: 8430, n: 8, a: []}};
-  store.get("players/" + q[1]).days = {"2026-11-21": {done: true, sc: 7705, n: 7, a: []}, "2026-11-20": {done: true, sc: 100, n: 1, a: []}};
+  store.get("players/" + q[1]).days = {"2026-11-21": {done: true, sc: 7705, n: 7, a: []}, "2026-11-20": {done: true, sc: 9999, n: 10, a: [], st: 200}};
+  store.get("players/" + q[0]).days["2026-11-20"].st = 100;
   store.get("players/" + q[2]).days = {"2026-11-22": {done: true, sc: 11681, n: 9, a: []}};
   const OW = OWN(); await sleep(200);
   ok(!!OW.document.getElementById("mrgopen"), "organiser sees the merge tool");
@@ -144,7 +153,7 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   const sel = OW.document.getElementById("mrgkeep"); sel.value = q[0];
   click(OW, "#mrggo"); await sleep(400);
   const KB = store.get("players/" + q[0]);
-  ok(KB && KB.days["2026-11-20"].sc === 8430 && KB.days["2026-11-21"].sc === 7705 && KB.days["2026-11-22"].sc === 11681, "all three days combined, higher score kept on a clash");
+  ok(KB && KB.days["2026-11-20"].sc === 8430 && KB.days["2026-11-21"].sc === 7705 && KB.days["2026-11-22"].sc === 11681, "all three days combined; on a clash the first attempt counts, not the higher replay");
   ok(!store.has("players/" + q[1]) && !store.has("players/" + q[2]), "the other two entries removed");
   ok(KB.uids.includes(q[1]) && KB.uids.includes(q[2]), "their browsers are recorded on the kept player");
   const Q3b = win(Q3.__auth.currentUser); await sleep(250);

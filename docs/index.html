@@ -115,7 +115,6 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
 <script>
 (function(){
   if (!window.firebase) return;
-  const OWNERS = ["bader.nooruddin.bot@gmail.com","bader.nooruddin@gmail.com"];
   firebase.initializeApp({apiKey:"AIzaSyBnHXmY96GrebuaN17Hwrd4gxPRjKCjDls",authDomain:"crude-awakening-trial.firebaseapp.com",projectId:"crude-awakening-trial",storageBucket:"crude-awakening-trial.firebasestorage.app",messagingSenderId:"182339202148",appId:"1:182339202148:web:22dd8f5730760103650371"});
   const auth = firebase.auth(), fs = firebase.firestore();
   // Log failures (no personal data) so problems players hit can be diagnosed.
@@ -160,7 +159,10 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
     }
   });
   const db = {doc: p => wrapDoc(fs.doc(p)), collection: p => p === "bank" ? bankCol(fs.collection(p)) : wrapCol(fs.collection(p))};
-  const isOwner = u => !!(u && !u.isAnonymous && u.email && u.emailVerified && OWNERS.includes(u.email.toLowerCase()));
+  // Organiser = a Google account that passes owner() in the security rules; probe with an organiser-only read.
+  let OWNER = false;
+  const checkOwner = async u => { if (!u || u.isAnonymous) return false; try { await fs.collection("flags").limit(1).get(); return true; } catch (e) { return false; } };
+  const isOwner = () => OWNER;
   window.FBDB = {
     start: async () => {
       let u = await new Promise(res => { const off = auth.onAuthStateChanged(x => { off(); res(x); }); });
@@ -177,6 +179,7 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
           if (!own.exists) { const q = await fs.collection("players").where("uids", "array-contains", u.uid).limit(1).get(); if (!q.empty) PID = q.docs[0].id; }
         }
       } catch (e) { logErr("device", e); }
+      OWNER = await checkOwner(u);
       paintOrg(u);
       return {db, uid: PID, owner: isOwner(u)};
     }
@@ -198,7 +201,7 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
       const s = await fs.collection("players").get();
       MRG = s.docs.map(d => Object.assign({id: d.id}, d.data())).filter(x => x.name)
         .sort((a, b) => a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : (a.joined || 0) - (b.joined || 0));
-      let h = '<b>Merge duplicate players</b><p class="note" style="margin:8px 0 10px">Tick every entry that is the same person (2 or more), then merge. All their days are combined into the one you keep (if two entries played the same day, the higher score is kept), the others are removed, and their browsers become that player.</p>';
+      let h = '<b>Merge duplicate players</b><p class="note" style="margin:8px 0 10px">Tick every entry that is the same person (2 or more), then merge. All their days are combined into the one you keep (if two entries played the same day, the first attempt counts), the others are removed, and their browsers become that player.</p>';
       h += '<div style="max-height:45vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 8px">' + MRG.map((x, i) =>
         '<label style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)"><input type="checkbox" class="mrgck" data-i="' + i + '" style="width:20px;height:20px"><span><b>' + esc(x.name) + '</b> · ' + esc(x.dept || "") + '<br><span class="note">' + dayCount(x) + ' day(s) · last ' + lastDay(x) + ' · joined ' + (x.joined ? new Date(x.joined).toISOString().slice(0, 10) : "?") + '</span></span></label>').join("") + '</div>';
       h += '<p class="note" style="margin:12px 0 6px">Keep which name and team?</p><select class="in" id="mrgkeep"><option value="">Tick entries first</option></select>';
@@ -225,7 +228,8 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
         const O = (await fs.doc("players/" + o.id).get()).data() || {};
         Object.keys(O.days || {}).forEach(k => {
           const a = days[k], b = O.days[k]; if (!b) return;
-          if (!a || ((b.done ? 1 : 0) > (a.done ? 1 : 0)) || ((b.done ? 1 : 0) === (a.done ? 1 : 0) && (b.sc || 0) > (a.sc || 0))) days[k] = b;
+          // same day played twice: keep the first attempt (earliest start), so a replay never counts
+          if (!a || (b.st && (!a.st || b.st < a.st))) days[k] = b;
         });
         uids.add(o.id); (O.uids || []).forEach(x => uids.add(x));
       }
@@ -1418,6 +1422,9 @@ $app.addEventListener("click", async e => {
       const name = (S.edit.name || "").trim().slice(0, 24);
       if (!name) return toast("Pick a display name.");
       if (!S.edit.dept) return toast("Pick your team.");
+      { const nk = x => String(x || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const clash = Object.values(S.players).find(p => p.id !== S.uid && p.name && nk(p.name) === nk(name));
+        if (clash) { const t = document.createElement("div"); t.className = "toast"; t.style.maxWidth = "340px"; t.textContent = "“" + clash.name + "” is already playing. If that's you, use “Play on another phone or computer” at the bottom of the page to link this device. Otherwise pick a different name."; document.body.appendChild(t); setTimeout(() => t.remove(), 7000); return; } }
       try { await saveMe({name, dept: S.edit.dept}); } catch(e){ return; }
       S.view = "home"; S.edit = null; break;
     }
