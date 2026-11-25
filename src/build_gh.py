@@ -144,6 +144,7 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
         }
       } catch (e) { logErr("device", e); }
       OWNER = await checkOwner(u);
+      watchNotice();
       paintOrg(u);
       return {db, uid: PID, owner: isOwner(u)};
     }
@@ -152,9 +153,10 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
   function paintOrg(u){
     const el = document.getElementById("orgfoot"); if (!el) return;
     const link = '<a href="#" id="lnkopen">Play on another phone or computer</a><br><br>';
-    if (isOwner(u)) el.innerHTML = link + '<a href="#" id="mrgopen">Merge duplicate players</a><br><br>Signed in as organiser · <a href="#" id="orgout">Sign out</a>';
+    if (isOwner(u)) el.innerHTML = link + '<a href="#" id="admopen"><b>Organiser dashboard</b></a> · <a href="#" id="mrgopen">Merge duplicate players</a><br><br>Signed in as organiser · <a href="#" id="orgout">Sign out</a>';
     else el.innerHTML = link + '<a href="#" id="orgin">Organiser sign-in</a>';
   }
+/*ADMIN*/
   // ---- Organiser: merge duplicate players into one record ----
   let MRG = [];
   const dayCount = x => Object.keys(x.days || {}).filter(k => x.days[k]).length;
@@ -264,7 +266,7 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
     }
   }
   document.addEventListener("click", async e => {
-    const t = e.target;
+    const t = e.target && e.target.closest ? (e.target.closest("[id]") || e.target) : e.target;
     if (t && t.id === "orgin") {
       e.preventDefault();
       try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); location.reload(); }
@@ -276,11 +278,13 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
     if (t && t.id === "lnkget") { getCode(); }
     if (t && t.id === "lnkuse") { useCode(); }
     if (t && t.id === "mrgopen") { e.preventDefault(); openMerge(); }
+    if (t && t.id === "admopen") { e.preventDefault(); openAdmin(); }
     if (t && t.id === "mrggo") { doMerge(); }
   });
 })();
 </script>
 ''' % {"sdk": SDK, "cfg": cfg}
+ADAPTER = ADAPTER.replace("/*ADMIN*/", r("gh_admin.js"), 1)
 FOOT = '<div class="wrap" id="app"></div>\n<div id="orgfoot" style="text-align:center;font-size:12px;opacity:.55;margin:18px 0 28px"></div>\n'
 d = must_replace(d, '<div class="wrap" id="app"></div>\n', FOOT + ADAPTER, "app div")
 d = must_replace(d, '<style>', '<style>\n#orgfoot a{color:inherit}', "style tag")

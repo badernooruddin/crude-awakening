@@ -158,6 +158,31 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   ok(KB.uids.includes(q[1]) && KB.uids.includes(q[2]), "their browsers are recorded on the kept player");
   const Q3b = win(Q3.__auth.currentUser); await sleep(250);
   ok(!Q3b.document.getElementById("in-name") && txt(Q3b).includes("Bo"), "a merged browser comes back as the kept player");
+  // Organiser dashboard
+  const D = OWN(); await sleep(250);
+  ok(!!D.document.getElementById("admopen") && !A.document.getElementById("admopen"), "dashboard link for organisers only");
+  click(D, "#admopen"); await sleep(250);
+  const dtxt = () => (D.document.getElementById("lnk") || {textContent: ""}).textContent;
+  ok(/played today \/ all players/.test(dtxt()) && /Teams/.test(dtxt()) && /Players per day/.test(dtxt()), "Today tab shows KPIs, teams and the 14-day chart");
+  ok(/Worth a look/.test(dtxt()), "watch list section renders");
+  for (const t of ["players", "questions", "errors", "notice"]) { click(D, '[data-adm-tab="' + t + '"]'); await sleep(250); ok(!/didn't work|Couldn't load/.test(dtxt()) && dtxt().length > 60, t + " tab renders"); }
+  // notice shows for players
+  click(D, '[data-adm-tab="notice"]'); await sleep(200);
+  D.document.getElementById("adm-notice").value = "Double points Friday!"; click(D, '[data-adm-notice="save"]'); await sleep(250);
+  const N = win(null); await sleep(250);
+  ok(N.document.getElementById("gh-notice") && N.document.getElementById("gh-notice").textContent.includes("Double points Friday!"), "published notice appears for players");
+  // let a player replay today
+  click(D, '[data-adm-tab="players"]'); await sleep(250);
+  const ali = [...store.keys()].find(k => k.startsWith("players/") && store.get(k).name === "Ali").slice(8);
+  ok(store.get("players/" + ali).days[lon], "Ali has played today before reset");
+  click(D, '[data-adm-reset="' + ali + '"]'); await sleep(250); click(D, '[data-adm-reset="' + ali + '"]'); await sleep(350);
+  ok(store.get("players/" + ali).days[lon] === null, "'Let replay today' needs two taps and clears today's attempt");
+  // rename refuses a clash, accepts a new name
+  click(D, '[data-adm-edit="' + ali + '"]'); await sleep(250);
+  D.document.getElementById("adm-name").value = "sara"; click(D, '[data-adm-save="' + ali + '"]'); await sleep(250);
+  ok(store.get("players/" + ali).name === "Ali" && dtxt().includes("already uses that name"), "rename to an existing name is refused");
+  D.document.getElementById("adm-name").value = "Ali K"; click(D, '[data-adm-save="' + ali + '"]'); await sleep(350);
+  ok(store.get("players/" + ali).name === "Ali K", "rename works");
   // a wrong code is refused
   const P3 = win(null); await sleep(150); click(P3, "#lnkopen"); await sleep(60); P3.document.getElementById("lnkin").value = "ZZZZZZZZ"; click(P3, "#lnkuse"); await sleep(200);
   ok(P3.document.getElementById("lnkmsg").textContent.includes("isn't valid"), "unknown code is refused with a clear message");
