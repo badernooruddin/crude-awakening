@@ -22,7 +22,7 @@ function header(){
   if (S.view === "play") return '<div class="mast compact"><h1><span>Crude </span><span>Awakening</span></h1></div>';
   const note = window.GH_NOTE ? '<p class="dnote">' + esc(window.GH_NOTE) + '</p>' : '';
   return '<header class="mast"><div class="bar">' + right + '</div><h1><span>Crude</span> <span>Awakening</span></h1>' +
-    '<p class="tag">You work at Vitol. You must be good. Or are you?</p>' + ghMark(m) + note + '</header>';
+    '<p class="tag">Oil trader? Analyst? Ops? You must be good… or are you?</p>' + ghMark(m) + note + '</header>';
 }
 const GH_TAUNTS = ["Still long yourself?", "Your desk can see the leaderboard. No pressure.", "Twenty seconds a question. No calling a broker.", "Confidence is not a fundamental.", "Yesterday's close has been noted.", "Go on. Take the position.", "You can't hedge this one.", "Ten questions. Your mark moves either way.", "The leaderboard has a long memory.", "Everyone's a ten until the set opens.", "Loud on the desk. Quiet on the leaderboard?", "Price discovery starts when you press Play."];
 function ghTaunt(){ const k = S.key || ""; let n = 0; for (const c of k) n = (n * 31 + c.charCodeAt(0)) % 9973; return GH_TAUNTS[n % GH_TAUNTS.length]; }
