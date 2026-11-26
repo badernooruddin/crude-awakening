@@ -5,5 +5,5 @@ function header(){
   if (S.view === "play") return '<div class="mast compact"><h1><span>Crude </span><span>Awakening</span></h1></div>';
   const note = window.GH_NOTE ? '<p class="dnote">' + esc(window.GH_NOTE) + '</p>' : '';
   return '<header class="mast"><div class="bar">' + right + '</div><h1><span>Crude</span><span>Awakening</span></h1>' +
-    '<p class="tag">You work in oil. You think you know it. Ten questions a day say otherwise. New set at midnight London.</p>' + note + '</header>';
+    '<p class="tag">Your LinkedIn says “industry expert”. Ten questions a day would like a word. New set at midnight London.</p>' + note + '</header>';
 }
