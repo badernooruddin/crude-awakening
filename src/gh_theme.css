@@ -1,7 +1,7 @@
 /* ---- Crude Awakening: horror theme (trial build) ----
    One loud thing: the dripping wordmark lit by a gas flare. Everything else stays quiet bitumen. */
 :root{--bg:#0d0a07;--panel:#16110c;--panel2:#1f1811;--line:#30261b;--text:#efe6d6;--mute:#a69b89;--dim:#73695b;
---sun:#ff8f2a;--sun2:#ffc27a;--dawn:#e0531a;--red:#e8504a}
+--title:#f26b21;--sun:#ff8f2a;--sun2:#ffc27a;--dawn:#e0531a;--red:#e8504a}
 html{background:var(--bg)}
 body{background:
   radial-gradient(120% 60% at 50% -8%, rgba(255,120,30,.20), rgba(255,120,30,0) 62%),
@@ -11,8 +11,8 @@ body{background:
 .mast .bar{display:flex;justify-content:flex-end;align-items:flex-start;min-height:26px}
 .mast .bar .me,.mast .bar .gear{margin-left:0}
 .mast .me{background:none;border:0;color:var(--mute);font-size:12px;text-align:right;padding:4px 2px 4px 8px}
-.mast h1{font-family:"Nosifer",Inter,system-ui,sans-serif;font-weight:400;font-size:clamp(30px,10.5vw,50px);line-height:1.12;letter-spacing:.01em;margin:6px 0 0;color:#f3e9d8;
-  text-shadow:0 0 22px rgba(255,120,30,.35),0 2px 0 #000}
+.mast h1{font-family:"Nosifer",Inter,system-ui,sans-serif;font-weight:400;font-size:clamp(30px,10.5vw,50px);line-height:1.12;letter-spacing:.01em;margin:6px 0 0;color:var(--title,#f26b21);
+  text-shadow:0 0 26px rgba(242,107,33,.45),0 2px 0 #000}
 .mast h1 span{display:block}
 .mast .tag{margin:12px auto 0;max-width:34ch;color:var(--mute);font-size:14px;line-height:1.5}
 .mast .tag b{color:var(--text);font-weight:700}
