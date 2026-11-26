@@ -4,7 +4,8 @@
 --title:#f26b21;--sun:#ff8f2a;--sun2:#ffc27a;--dawn:#e0531a;--red:#e8504a}
 html{background:var(--bg)}
 body{background:
-  radial-gradient(120% 60% at 50% -8%, rgba(255,120,30,.20), rgba(255,120,30,0) 62%),
+  radial-gradient(70% 300px at 50% 150px, rgba(242,107,33,.30), rgba(242,107,33,0) 100%),
+  radial-gradient(120% 60% at 50% -8%, rgba(255,120,30,.10), rgba(255,120,30,0) 62%),
   radial-gradient(140% 100% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%),
   var(--bg);background-attachment:fixed;min-height:100vh}
 .mast{position:relative;text-align:center;margin:2px 0 18px;padding-top:6px}
@@ -27,8 +28,22 @@ body{background:
 .chip.on,.tabs button.on{background:var(--sun);color:#1d0f05}
 #gh-notice{border-color:var(--dawn)!important}
 @media (prefers-reduced-motion:no-preference){
-  .mast:not(.compact) h1{animation:flare 4.8s ease-in-out 1}
-  @keyframes flare{0%{opacity:0;text-shadow:0 0 0 rgba(255,120,30,0)}18%{opacity:.25}22%{opacity:.9}26%{opacity:.4}34%{opacity:1;text-shadow:0 0 40px rgba(255,120,30,.6),0 2px 0 #000}100%{text-shadow:0 0 22px rgba(255,120,30,.35),0 2px 0 #000}}
+  .mast:not(.compact) h1{animation:flare 3.6s ease-in-out 1}
+  @keyframes flare{0%{opacity:0}18%{opacity:.25}22%{opacity:.9}26%{opacity:.4}34%,100%{opacity:1}}
 }
 textarea.in,select.in{width:100%;display:block;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;color:var(--text);font:inherit;font-size:15px;line-height:1.45}
 textarea.in:focus,select.in:focus{outline:2px solid var(--sun);border-color:transparent}
+/* crude oil seeping in from the top edge: black is the threat, orange is the light */
+.mast .oil{position:relative;left:50%;width:100vw;transform:translateX(-50%);height:150px;margin:-16px 0 -126px;pointer-events:none;z-index:0}
+.mast .oilsvg{position:absolute;inset:0;width:100%;height:100%}
+.mast .oilsvg .drop{opacity:0;transform-box:fill-box;transform-origin:50% 0}
+.mast .bar,.mast h1,.mast .tag,.mast .dnote{position:relative;z-index:1}
+.mast h1{margin-top:52px;color:#f26b21;background:linear-gradient(180deg,#ff8a2e 10%,#f26b21 55%,#d9480f 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:none;filter:drop-shadow(0 0 16px rgba(242,107,33,.38)) drop-shadow(0 2px 0 #000)}
+.mast .tag{color:#d9cfc2;font-size:15px}
+.taunt{margin:14px 0 10px;text-align:center;font-style:italic;color:#ffc27a;font-size:14.5px}
+.verdict{margin:10px auto 4px;max-width:34ch;font-size:15.5px;line-height:1.45;color:var(--text);font-style:italic}
+@media (prefers-reduced-motion:no-preference){
+  .mast .oilsvg .drop{animation:drip 9s cubic-bezier(.5,0,.9,.5) 2s infinite}
+  @keyframes drip{0%{opacity:0;transform:translateY(-4px) scale(.4)}12%{opacity:1}55%{opacity:1;transform:translateY(0) scale(1,1.18)}62%{opacity:1;transform:translateY(4px) scale(.9,1.2)}80%{opacity:1;transform:translateY(70px) scale(.85,1.25)}85%,100%{opacity:0;transform:translateY(90px) scale(.8,1.2)}}
+}

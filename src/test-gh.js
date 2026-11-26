@@ -187,7 +187,12 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   const dn = N2.document.querySelector(".mast .dnote");
   ok(dn && dn.textContent === "Refining week starts.", "today's daily note shows under the title for players");
   ok(store.get("config/note-" + lon).text === "Refining week starts.", "daily note saved for today's date only");
-  ok(/Crude/.test(N2.document.querySelector(".mast h1").textContent), "themed masthead renders");
+  ok(/Crude/.test(N2.document.querySelector(".mast h1").textContent) && N2.document.querySelector(".mast .oilsvg"), "themed masthead with oil band renders");
+  const P9 = win(null); await sleep(150); await join(P9, "Verdict Tester", "Finance"); await sleep(80);
+  ok(!!P9.document.querySelector(".taunt") && P9.document.querySelector(".taunt").textContent.length > 5, "a daily taunt shows above Play");
+  ok(await playAll(P9, () => 0), "tester finishes the set"); await sleep(200);
+  const vd = P9.document.querySelector(".verdict");
+  ok(vd && /Flawless|Strong book|Flat on the day|contango|Dry hole/.test(vd.textContent), "result screen shows a score verdict (" + (vd ? vd.textContent.slice(0, 30) : "none") + ")");
   // let a player replay today
   click(D, '[data-adm-tab="players"]'); await sleep(250);
   const ali = [...store.keys()].find(k => k.startsWith("players/") && store.get(k).name === "Ali").slice(8);
