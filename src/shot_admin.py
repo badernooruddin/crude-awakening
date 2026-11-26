@@ -55,8 +55,10 @@ async def main():
         await pg.route("https://www.gstatic.com/**", lambda r: r.fulfill(body="", content_type="application/javascript"))
         await pg.route("**/bank/index.json", lambda r: r.fulfill(body='{"batches":[]}', content_type="application/json"))
         await pg.route("https://trial.test/", lambda r: r.fulfill(body=html, content_type="text/html"))
-        await pg.route("https://fonts.googleapis.com/**", lambda r: r.fulfill(body="@font-face{font-family:'Nosifer';src:url(https://trial.test/nosifer.woff2) format('woff2')}", content_type="text/css"))
-        await pg.route("https://trial.test/nosifer.woff2", lambda r: r.fulfill(path="/tmp/fnt/node_modules/@fontsource/nosifer/files/nosifer-latin-400-normal.woff2", content_type="font/woff2"))
+        FV = "/tmp/fnt/node_modules/@fontsource-variable/"
+        await pg.route("https://fonts.googleapis.com/**", lambda r: r.fulfill(body="@font-face{font-family:'Bricolage Grotesque';font-weight:200 800;font-stretch:75% 100%;src:url(https://trial.test/bricolage.woff2) format('woff2')}@font-face{font-family:'Instrument Sans';font-weight:400 700;src:url(https://trial.test/instrument.woff2) format('woff2')}", content_type="text/css"))
+        await pg.route("https://trial.test/bricolage.woff2", lambda r: r.fulfill(path=FV + "bricolage-grotesque/files/bricolage-grotesque-latin-standard-normal.woff2", content_type="font/woff2"))
+        await pg.route("https://trial.test/instrument.woff2", lambda r: r.fulfill(path=FV + "instrument-sans/files/instrument-sans-latin-wght-normal.woff2", content_type="font/woff2"))
         await pg.add_init_script(js)
         await pg.goto("https://trial.test/")
         await pg.wait_for_timeout(5500)

@@ -105,57 +105,113 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
 .mix.on{border-color:var(--amber,#ffb347);box-shadow:0 0 0 1px var(--amber,#ffb347) inset}
 .lvl.l0{background:#5a1f2b;color:#ffc2cc}
 </style>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet">
 <style>
-/* ---- Crude Awakening: horror theme (trial build) ----
-   One loud thing: the dripping wordmark lit by a gas flare. Everything else stays quiet bitumen. */
-:root{--bg:#0d0a07;--panel:#16110c;--panel2:#1f1811;--line:#30261b;--text:#efe6d6;--mute:#a69b89;--dim:#73695b;
---title:#f26b21;--sun:#ff8f2a;--sun2:#ffc27a;--dawn:#e0531a;--red:#e8504a}
-html{background:var(--bg)}
-body{background:
-  radial-gradient(70% 300px at 50% 150px, rgba(242,107,33,.30), rgba(242,107,33,0) 100%),
-  radial-gradient(120% 60% at 50% -8%, rgba(255,120,30,.10), rgba(255,120,30,0) 62%),
-  radial-gradient(140% 100% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%),
-  var(--bg);background-attachment:fixed;min-height:100vh}
-.mast{position:relative;text-align:center;margin:2px 0 18px;padding-top:6px}
-.mast .bar{display:flex;justify-content:flex-end;align-items:flex-start;min-height:26px}
-.mast .bar .me,.mast .bar .gear{margin-left:0}
-.mast .me{background:none;border:0;color:var(--mute);font-size:12px;text-align:right;padding:4px 2px 4px 8px}
-.mast h1{font-family:"Nosifer",Inter,system-ui,sans-serif;font-weight:400;font-size:clamp(30px,10.5vw,50px);line-height:1.12;letter-spacing:.01em;margin:6px 0 0;color:var(--title,#f26b21);
-  text-shadow:0 0 26px rgba(242,107,33,.45),0 2px 0 #000}
+/* ---- Crude Awakening: "marked to market" theme ----
+   Daylight, not a dungeon. One loud thing: the orange masthead with the mark, the gap between
+   what you think you're worth (10) and what the tape says. Everything else is quiet paper and ink. */
+:root{--bg:#f3f5f8;--panel:#ffffff;--panel2:#edf0f5;--line:#d5dbe5;--text:#0f1b3d;--mute:#56617a;--dim:#6f7a92;
+--sun:#f26b21;--sun2:#ffd9c2;--dawn:#c9480d;--green:#0b7f58;--red:#c8322f;--blue:#2456c8;--card2:#edf0f5;--amber:#f26b21;
+--ink:#0f1b3d;--disp:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif}
+html{background:var(--bg);overflow-x:clip}
+html,body{font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* masthead */
+.mast{position:relative;z-index:0;margin:-16px 0 16px;padding:10px 0 22px;color:var(--ink)}
+.mast::before{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:50%;width:100vw;transform:translateX(-50%);background:#f26b21}
+.mast .bar{display:flex;justify-content:flex-end;align-items:flex-start;min-height:30px}
+.mast .gear{margin-left:0;font-size:18px}
+.mast .me{background:none;border:0;color:var(--ink);font-size:13px;font-weight:600;text-align:right;padding:4px 0 4px 8px;line-height:1.3}
+.mast .fire{color:var(--ink)}
+.mast h1{font-family:var(--disp);font-weight:800;font-stretch:82%;font-size:clamp(52px,16vw,92px);line-height:.88;letter-spacing:-.005em;margin:0 0 0 -3px;color:var(--ink)}
 .mast h1 span{display:block}
-.mast .tag{margin:12px auto 0;max-width:34ch;color:var(--mute);font-size:14px;line-height:1.5}
-.mast .tag b{color:var(--text);font-weight:700}
-.mast .dnote{margin:14px auto 0;max-width:42ch;padding:10px 14px;border-left:3px solid var(--dawn);background:rgba(224,83,26,.08);text-align:left;font-size:14.5px;line-height:1.5;color:var(--text);border-radius:0 10px 10px 0;white-space:pre-line}
-.mast.compact{display:flex;align-items:center;justify-content:space-between;text-align:left;margin-bottom:12px}
-.mast.compact h1{font-size:18px;margin:0;text-shadow:0 0 12px rgba(255,120,30,.3)}
+.mast .tag{margin:12px 0 0;max-width:36ch;font-size:15px;line-height:1.45;font-weight:500;color:var(--ink)}
+.mtm{margin-top:18px;--p:100%}
+.mtm .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:13.5px;font-weight:600}
+.mtm .row>*{flex:none}
+.mtm .row b{font-family:var(--disp);font-variant-numeric:tabular-nums;font-weight:700;font-size:15px}
+
+.mtm .mk{margin-top:8px;align-items:flex-end}
+.mtm .mk b{font-size:54px;line-height:.82;font-weight:800;letter-spacing:-.02em}
+.mtm .mk small{display:block;font-size:12.5px;font-weight:500;margin-top:1px}
+.mtm .mk em{font-style:normal;font-weight:600}
+.mtm .scale{position:relative;height:18px;margin:7px 9px 0}
+.mtm .scale::before{content:"";position:absolute;left:-9px;right:-9px;top:8px;height:2px;background:var(--ink)}
+.mtm .scale::after{content:"";position:absolute;left:var(--p);right:0;top:8px;height:2px;background:repeating-linear-gradient(90deg,#f26b21 0 4px,transparent 4px 8px)}
+.mtm .scale i{position:absolute;top:0;width:18px;height:18px;margin-left:-9px;border-radius:50%;box-sizing:border-box}
+.mtm .ring{left:100%;border:2px solid var(--ink);background:#f26b21;z-index:1}
+.mtm .dot{left:var(--p);background:#fff;border:2px solid var(--ink);z-index:2}
+.mast .dnote{margin:18px 0 0;padding:11px 14px;background:#fff;color:var(--ink);font-weight:500;font-size:14.5px;line-height:1.45;border-radius:4px 14px 14px 14px;white-space:pre-line}
+.mast.compact{margin:0 0 12px;padding:0}
+.mast.compact::before{display:none}
+.mast.compact h1{font-size:20px;line-height:1.1;letter-spacing:-.02em;margin:0;padding-left:12px;border-left:6px solid #f26b21}
 .mast.compact h1 span{display:inline}
-.hero{background:linear-gradient(165deg,#1d130c 0%,#2b140b 55%,#47180a 100%);border-color:#4a2414}
-.btn{background:linear-gradient(180deg,#ffa043,#f07a1c);color:#1d0f05;box-shadow:0 0 0 1px rgba(255,150,60,.25),0 6px 22px -8px rgba(255,110,20,.55)}
-.btn.sec{background:var(--panel2);box-shadow:none}
-.btn.ghost{background:none;box-shadow:none}
-.chip.on,.tabs button.on{background:var(--sun);color:#1d0f05}
-#gh-notice{border-color:var(--dawn)!important}
-@media (prefers-reduced-motion:no-preference){
-  .mast:not(.compact) h1{animation:flare 3.6s ease-in-out 1}
-  @keyframes flare{0%{opacity:0}18%{opacity:.25}22%{opacity:.9}26%{opacity:.4}34%,100%{opacity:1}}
-}
-textarea.in,select.in{width:100%;display:block;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;color:var(--text);font:inherit;font-size:15px;line-height:1.45}
-textarea.in:focus,select.in:focus{outline:2px solid var(--sun);border-color:transparent}
-/* crude oil seeping in from the top edge: black is the threat, orange is the light */
-.mast .oil{position:relative;left:50%;width:100vw;transform:translateX(-50%);height:150px;margin:-16px 0 -126px;pointer-events:none;z-index:0}
-.mast .oilsvg{position:absolute;inset:0;width:100%;height:100%}
-.mast .oilsvg .drop{opacity:0;transform-box:fill-box;transform-origin:50% 0}
-.mast .bar,.mast h1,.mast .tag,.mast .dnote{position:relative;z-index:1}
-.mast h1{margin-top:52px;color:#f26b21;background:linear-gradient(180deg,#ff8a2e 10%,#f26b21 55%,#d9480f 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  text-shadow:none;filter:drop-shadow(0 0 16px rgba(242,107,33,.38)) drop-shadow(0 2px 0 #000)}
-.mast .tag{color:#d9cfc2;font-size:15px}
-.taunt{margin:14px 0 10px;text-align:center;font-style:italic;color:#ffc27a;font-size:14.5px}
-.verdict{margin:10px auto 4px;max-width:34ch;font-size:15.5px;line-height:1.45;color:var(--text);font-style:italic}
-@media (prefers-reduced-motion:no-preference){
-  .mast .oilsvg .drop{animation:drip 9s cubic-bezier(.5,0,.9,.5) 2s infinite}
-  @keyframes drip{0%{opacity:0;transform:translateY(-4px) scale(.4)}12%{opacity:1}55%{opacity:1;transform:translateY(0) scale(1,1.18)}62%{opacity:1;transform:translateY(4px) scale(.9,1.2)}80%{opacity:1;transform:translateY(70px) scale(.85,1.25)}85%,100%{opacity:0;transform:translateY(90px) scale(.8,1.2)}}
-}
+
+/* surfaces */
+.card{border-radius:14px}
+.hero{background:var(--ink);border-color:var(--ink);color:#fff;--text:#fff;--mute:#b9c2d6;--dim:#93a0bb;--line:#2b3961;--panel2:#1b2950;--dawn:#ff9a5c;border-radius:4px 22px 22px 22px}
+.hero .day{font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--sun2)}
+.hero h2{font-family:var(--disp);font-weight:800;font-stretch:87%;font-size:30px;letter-spacing:-.025em;margin:6px 0 6px}
+.hero .note{color:#c9d1e3!important}
+.kpis{gap:0;margin-top:16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.kpi{background:none;border-radius:0;padding:12px 4px;text-align:left}
+.kpi:first-child{padding-left:0}
+.kpi + .kpi{border-left:1px solid var(--line);padding-left:12px}
+.kpi b{font:700 24px/1.1 var(--disp);font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;font-weight:500}
+.taunt{margin:18px 0 12px;font-family:var(--disp);font-weight:600;font-size:19px;line-height:1.25;letter-spacing:-.01em;color:#fff}
+.verdict{margin:10px auto 6px;max-width:32ch;font-family:var(--disp);font-weight:600;font-size:18px;line-height:1.3;color:#fff}
+.count{font:700 13px var(--disp);font-variant-numeric:tabular-nums}
+.big{font-family:var(--disp);font-variant-numeric:tabular-nums}
+
+/* controls */
+.btn{background:#f26b21;color:var(--ink);border-radius:10px;font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:-.005em}
+.btn:hover{background:#ff7d36}
+.btn.sec{background:var(--panel);color:var(--text);border:1.5px solid var(--text);font-size:15px}
+.btn.sec:hover{background:var(--panel2)}
+.hero .btn.sec{background:none;border-color:#5b6890}
+.btn.ghost,.btn.ghost:hover{background:none;color:var(--mute);font-family:inherit;font-size:14px;font-weight:600}
+label.f{text-transform:none;letter-spacing:0;font-size:13.5px;font-weight:600;color:var(--text)}
+input.in,textarea.in,select.in{width:100%;display:block;background:var(--panel);border:1.5px solid #aab3c5;border-radius:10px;padding:12px;color:var(--text);font:inherit;font-size:16px;line-height:1.4}
+input.in:focus,textarea.in:focus,select.in:focus{outline:2px solid var(--ink);outline-offset:1px;border-color:var(--ink)}
+.chip{background:var(--panel);border-color:#aab3c5;color:var(--text)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.tabs{background:none;border:0;border-bottom:1.5px solid var(--line);border-radius:0;padding:0;gap:0}
+.tabs button{border-radius:0;padding:10px 2px;font-size:13.5px;font-weight:600;margin-bottom:-1.5px;border-bottom:3px solid transparent}
+.tabs button.on{background:none;color:var(--text);border-bottom-color:#f26b21}
+
+/* leaderboard */
+.lb .rk,.lb .sc{font-family:var(--disp);font-variant-numeric:tabular-nums}
+.lb .sc{font-size:15px}
+.lb .sub{color:var(--mute)}
+.lb tr.mine td{background:#fde6d8}
+.lb tr.mine td:first-child{box-shadow:inset 4px 0 0 #f26b21}
+
+/* play */
+.q{font-family:var(--disp);font-weight:700;font-size:21px;line-height:1.28;letter-spacing:-.015em}
+.clock b{font:700 16px var(--disp);font-variant-numeric:tabular-nums}
+.clock .bar i{background:#f26b21}
+.dots i.cur{background:var(--ink)}
+.opt{background:var(--panel);border:1.5px solid #aab3c5;border-radius:10px;color:var(--text)}
+.opt .l{font:700 14px/1 var(--disp);background:var(--panel2);color:var(--text)}
+.opt.pick{border-color:var(--ink);background:#fde6d8}.opt.pick .l{background:var(--ink);color:#fff}
+.opt.right{border-color:var(--green);background:#e2f3ec}.opt.right .l{background:var(--green);color:#fff}
+.opt.wrong{border-color:var(--red);background:#fbe6e4}.opt.wrong .l{background:var(--red);color:#fff}
+.fb.ok{background:#e2f3ec}.fb.no{background:#fbe6e4}
+.lvl{text-transform:none;letter-spacing:0;font-weight:700}
+.lvl.l0{background:#f6e0ea;color:#8c1f4d}.lvl.l1{background:#e2f3ec;color:var(--green)}.lvl.l2{background:#fde6d8;color:#9a3d08}.lvl.l3{background:#fbe6e4;color:var(--red)}
+.rev .e,.rules li{color:var(--mute)}
+.missed{background:#e8eefb;border-color:#c3d0f0}
+.mix{background:var(--panel2);border-color:var(--line)}
+.toast{background:var(--ink);border-color:var(--ink);color:#fff}
+textarea.share{font-family:inherit}
+.note[style*="ff8a8a"]{color:var(--red)!important}
+#gh-notice{background:var(--panel)!important;border:1.5px solid var(--ink)!important;border-radius:10px!important;margin:10px 16px 26px!important}
+@media (min-width:592px){#gh-notice{margin:10px auto 26px!important}}
+#orgfoot{opacity:1!important;color:var(--mute)}
+[data-adm-tab]{margin-top:0!important}
 </style>
 </head>
 <body>
@@ -1524,17 +1580,34 @@ function render(){
   const nm = document.getElementById("in-name"); if (nm) nm.oninput = e => { S.edit.name = e.target.value; };
 }
 window.addEventListener("gh-rerender", () => { try { if (S.view !== "play") render(); } catch (e) {} });
+// The mark: what the player thinks they are worth (10) against their real average. Runs down once, on first paint.
+function ghMarkRun(){
+  const D = 1500, t = Math.min(1, (Date.now() - window.GH_T0) / D), e = 1 - Math.pow(1 - t, 3);
+  const el = document.querySelector(".mast .mtm[data-v]");
+  if (el) { const v = +el.getAttribute("data-v"), cur = 10 - (10 - v) * e; el.style.setProperty("--p", (cur * 10) + "%"); const n = el.querySelector(".mk b"); if (n) n.textContent = cur.toFixed(1); }
+  if (t < 1) requestAnimationFrame(ghMarkRun);
+}
+function ghMark(m){
+  let n = 0, s = 0; const days = m && m.days || {};
+  for (const k in days) { const d = days[k]; if (d && d.done && typeof d.n === "number") { n++; s += d.n; } }
+  const top = '<div class="row own"><span>You, by your own estimate</span><b>10.0</b></div>';
+  if (!n) return '<div class="mtm">' + top + '<div class="scale"><i class="ring"></i></div><div class="row mk"><span>You, marked to market</span><em>no trades yet</em></div></div>';
+  const v = Math.round(s / n * 10) / 10;
+  try { if (!window.GH_T0 && window.requestAnimationFrame && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) { window.GH_T0 = Date.now(); requestAnimationFrame(ghMarkRun); } } catch (e) {}
+  return '<div class="mtm" data-v="' + v + '" style="--p:' + (v * 10) + '%">' + top + '<div class="scale"><i class="ring"></i><i class="dot"></i></div>' +
+    '<div class="row mk"><span>You, marked to market <small>average over ' + n + (n === 1 ? ' set' : ' sets') + '</small></span><b>' + v.toFixed(1) + '</b></div></div>';
+}
 function header(){
   const m = me(); const st = m ? streak(m.days || {}, S.key) : 0;
   const right = (S.owner && m && m.name && S.view !== "play" ? '<button class="gear" data-a="admin" title="Organiser tools">⚙️</button>' : '') + (m && m.name && S.view !== "play" ? '<button class="me" data-a="profile">' + esc(m.name) + (st ? '<br><span class="fire">🔥 ' + st + '</span>' : '') + '</button>' : '');
   if (S.view === "play") return '<div class="mast compact"><h1><span>Crude </span><span>Awakening</span></h1></div>';
   const note = window.GH_NOTE ? '<p class="dnote">' + esc(window.GH_NOTE) + '</p>' : '';
-  return '<header class="mast"><div class="oil"><svg class="oilsvg" viewBox="0 0 1200 170" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><defs><linearGradient id="oilg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050403"/><stop offset=".8" stop-color="#14100b"/></linearGradient><linearGradient id="oils" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a2a14"/><stop offset=".5" stop-color="#1f2e22"/><stop offset="1" stop-color="#3a2a14"/></linearGradient><linearGradient id="oilm" x1="0" y1="0" x2="0" y2="1"><stop offset=".12" stop-color="#000"/><stop offset=".3" stop-color="#fff"/></linearGradient><mask id="oilk"><rect width="100%" height="100%" fill="url(#oilm)"/></mask></defs><path fill="url(#oilg)" d="M0 0 H1200 V34 Q1194 36 1188 34 C1179.2 35 1178.7 43.9 1178.7 48.8 C1179.0 51.5 1181.1 53.9 1180.9 55.7 A5.9 5.9 0 0 1 1169.1 55.7 C1168.9 53.9 1171.0 51.5 1171.3 48.8 C1171.3 43.9 1170.8 35 1162 34 Q1149 32 1136 34 C1126.3 35 1125.6 53.8 1125.6 67.2 C1125.9 71.2 1129.2 74.8 1128.8 77.5 A8.8 8.8 0 0 1 1111.2 77.5 C1110.8 74.8 1114.1 71.2 1114.4 67.2 C1114.4 53.8 1113.7 35 1104 34 Q1084 37 1064 34 C1054.9 35 1054.3 46.6 1054.3 53.6 C1054.6 56.8 1057.1 59.5 1056.9 61.6 A6.9 6.9 0 0 1 1043.1 61.6 C1042.9 59.5 1045.4 56.8 1045.7 53.6 C1045.7 46.6 1045.1 35 1036 34 Q1014 33 992 34 C982.4 35 981.5 62.8 981.5 85.4 C981.9 90.1 985.7 94.3 985.3 97.5 A10.3 10.3 0 0 1 964.7 97.5 C964.3 94.3 968.1 90.1 968.5 85.4 C968.5 62.8 967.6 35 958 34 Q938 36 918 34 C909.2 35 908.7 43.0 908.7 46.8 C909.0 49.5 911.1 51.9 910.9 53.7 A5.9 5.9 0 0 1 899.1 53.7 C898.9 51.9 901.0 49.5 901.3 46.8 C901.3 43.0 900.8 35 892 34 Q874 31 856 34 C846.0 35 845.3 52.0 845.3 63.8 C845.6 67.6 848.7 71.0 848.3 73.6 A8.3 8.3 0 0 1 831.7 73.6 C831.3 71.0 834.4 67.6 834.7 63.8 C834.7 52.0 834.0 35 824 34 Q797 35 770 34 C760.3 35 759.6 58.3 759.6 77.2 C759.9 81.2 763.2 84.8 762.8 87.5 A8.8 8.8 0 0 1 745.2 87.5 C744.8 84.8 748.1 81.2 748.4 77.2 C748.4 58.3 747.7 35 738 34 Q724 32 710 34 C700.5 35 700.0 47.5 700.0 56.2 C700.3 59.1 702.6 61.7 702.4 63.7 A6.4 6.4 0 0 1 689.6 63.7 C689.4 61.7 691.7 59.1 692.0 56.2 C692.0 47.5 691.5 35 682 34 Q670 37 657 34 C646.4 35 645.4 77.2 645.4 115.6 C645.9 121.0 650.2 125.8 649.8 129.4 A11.8 11.8 0 0 1 626.2 129.4 C625.8 125.8 630.1 121.0 630.6 115.6 C630.6 77.2 629.6 35 619 34 Q608 33 597 34 C587.3 35 586.6 54.7 586.6 69.2 C586.9 73.2 590.2 76.8 589.8 79.5 A8.8 8.8 0 0 1 572.2 79.5 C571.8 76.8 575.1 73.2 575.4 69.2 C575.4 54.7 574.7 35 565 34 Q552 36 539 34 C530.2 35 529.7 43.9 529.7 48.8 C530.0 51.5 532.1 53.9 531.9 55.7 A5.9 5.9 0 0 1 520.1 55.7 C519.9 53.9 522.0 51.5 522.3 48.8 C522.3 43.9 521.8 35 513 34 Q505 32 496 34 C486.4 35 485.5 61.9 485.5 83.4 C485.9 88.1 489.7 92.3 489.3 95.5 A10.3 10.3 0 0 1 468.7 95.5 C468.3 92.3 472.1 88.1 472.5 83.4 C472.5 61.9 471.6 35 462 34 Q454 35 448 34 C438.2 35 437.6 49.3 437.6 59.0 C437.9 62.4 440.6 65.4 440.4 67.6 A7.3 7.3 0 0 1 425.6 67.6 C425.4 65.4 428.1 62.4 428.4 59.0 C428.4 49.3 427.8 35 418 34 Q396 31 374 34 C365.2 35 364.6 47.5 364.6 55.0 C364.9 58.4 367.6 61.4 367.4 63.6 A7.3 7.3 0 0 1 352.6 63.6 C352.4 61.4 355.1 58.4 355.4 55.0 C355.4 47.5 354.8 35 346 34 Q326 36 307 34 C297.0 35 296.2 60.1 296.2 80.0 C296.6 84.5 300.2 88.5 299.8 91.5 A9.8 9.8 0 0 1 280.2 91.5 C279.8 88.5 283.4 84.5 283.8 80.0 C283.8 60.1 283.0 35 273 34 Q246 33 218 34 C209.2 35 208.7 42.1 208.7 44.8 C209.0 47.5 211.1 49.9 210.9 51.7 A5.9 5.9 0 0 1 199.1 51.7 C198.9 49.9 201.0 47.5 201.3 44.8 C201.3 42.1 200.8 35 192 34 Q164 37 136 34 C126.3 35 125.6 55.6 125.6 71.2 C125.9 75.2 129.2 78.8 128.8 81.5 A8.8 8.8 0 0 1 111.2 81.5 C110.8 78.8 114.1 75.2 114.4 71.2 C114.4 55.6 113.7 35 104 34 Q79 32 54 34 C44.9 35 44.3 45.7 44.3 51.6 C44.6 54.8 47.1 57.5 46.9 59.6 A6.9 6.9 0 0 1 33.1 59.6 C32.9 57.5 35.4 54.8 35.7 51.6 C35.7 45.7 35.1 35 26 34 Q13 36 0 34 Z"/><path fill="url(#oils)" opacity=".35" mask="url(#oilk)" d="M0 0 H1200 V34 Q1194 36 1188 34 C1179.2 35 1178.7 43.9 1178.7 48.8 C1179.0 51.5 1181.1 53.9 1180.9 55.7 A5.9 5.9 0 0 1 1169.1 55.7 C1168.9 53.9 1171.0 51.5 1171.3 48.8 C1171.3 43.9 1170.8 35 1162 34 Q1149 32 1136 34 C1126.3 35 1125.6 53.8 1125.6 67.2 C1125.9 71.2 1129.2 74.8 1128.8 77.5 A8.8 8.8 0 0 1 1111.2 77.5 C1110.8 74.8 1114.1 71.2 1114.4 67.2 C1114.4 53.8 1113.7 35 1104 34 Q1084 37 1064 34 C1054.9 35 1054.3 46.6 1054.3 53.6 C1054.6 56.8 1057.1 59.5 1056.9 61.6 A6.9 6.9 0 0 1 1043.1 61.6 C1042.9 59.5 1045.4 56.8 1045.7 53.6 C1045.7 46.6 1045.1 35 1036 34 Q1014 33 992 34 C982.4 35 981.5 62.8 981.5 85.4 C981.9 90.1 985.7 94.3 985.3 97.5 A10.3 10.3 0 0 1 964.7 97.5 C964.3 94.3 968.1 90.1 968.5 85.4 C968.5 62.8 967.6 35 958 34 Q938 36 918 34 C909.2 35 908.7 43.0 908.7 46.8 C909.0 49.5 911.1 51.9 910.9 53.7 A5.9 5.9 0 0 1 899.1 53.7 C898.9 51.9 901.0 49.5 901.3 46.8 C901.3 43.0 900.8 35 892 34 Q874 31 856 34 C846.0 35 845.3 52.0 845.3 63.8 C845.6 67.6 848.7 71.0 848.3 73.6 A8.3 8.3 0 0 1 831.7 73.6 C831.3 71.0 834.4 67.6 834.7 63.8 C834.7 52.0 834.0 35 824 34 Q797 35 770 34 C760.3 35 759.6 58.3 759.6 77.2 C759.9 81.2 763.2 84.8 762.8 87.5 A8.8 8.8 0 0 1 745.2 87.5 C744.8 84.8 748.1 81.2 748.4 77.2 C748.4 58.3 747.7 35 738 34 Q724 32 710 34 C700.5 35 700.0 47.5 700.0 56.2 C700.3 59.1 702.6 61.7 702.4 63.7 A6.4 6.4 0 0 1 689.6 63.7 C689.4 61.7 691.7 59.1 692.0 56.2 C692.0 47.5 691.5 35 682 34 Q670 37 657 34 C646.4 35 645.4 77.2 645.4 115.6 C645.9 121.0 650.2 125.8 649.8 129.4 A11.8 11.8 0 0 1 626.2 129.4 C625.8 125.8 630.1 121.0 630.6 115.6 C630.6 77.2 629.6 35 619 34 Q608 33 597 34 C587.3 35 586.6 54.7 586.6 69.2 C586.9 73.2 590.2 76.8 589.8 79.5 A8.8 8.8 0 0 1 572.2 79.5 C571.8 76.8 575.1 73.2 575.4 69.2 C575.4 54.7 574.7 35 565 34 Q552 36 539 34 C530.2 35 529.7 43.9 529.7 48.8 C530.0 51.5 532.1 53.9 531.9 55.7 A5.9 5.9 0 0 1 520.1 55.7 C519.9 53.9 522.0 51.5 522.3 48.8 C522.3 43.9 521.8 35 513 34 Q505 32 496 34 C486.4 35 485.5 61.9 485.5 83.4 C485.9 88.1 489.7 92.3 489.3 95.5 A10.3 10.3 0 0 1 468.7 95.5 C468.3 92.3 472.1 88.1 472.5 83.4 C472.5 61.9 471.6 35 462 34 Q454 35 448 34 C438.2 35 437.6 49.3 437.6 59.0 C437.9 62.4 440.6 65.4 440.4 67.6 A7.3 7.3 0 0 1 425.6 67.6 C425.4 65.4 428.1 62.4 428.4 59.0 C428.4 49.3 427.8 35 418 34 Q396 31 374 34 C365.2 35 364.6 47.5 364.6 55.0 C364.9 58.4 367.6 61.4 367.4 63.6 A7.3 7.3 0 0 1 352.6 63.6 C352.4 61.4 355.1 58.4 355.4 55.0 C355.4 47.5 354.8 35 346 34 Q326 36 307 34 C297.0 35 296.2 60.1 296.2 80.0 C296.6 84.5 300.2 88.5 299.8 91.5 A9.8 9.8 0 0 1 280.2 91.5 C279.8 88.5 283.4 84.5 283.8 80.0 C283.8 60.1 283.0 35 273 34 Q246 33 218 34 C209.2 35 208.7 42.1 208.7 44.8 C209.0 47.5 211.1 49.9 210.9 51.7 A5.9 5.9 0 0 1 199.1 51.7 C198.9 49.9 201.0 47.5 201.3 44.8 C201.3 42.1 200.8 35 192 34 Q164 37 136 34 C126.3 35 125.6 55.6 125.6 71.2 C125.9 75.2 129.2 78.8 128.8 81.5 A8.8 8.8 0 0 1 111.2 81.5 C110.8 78.8 114.1 75.2 114.4 71.2 C114.4 55.6 113.7 35 104 34 Q79 32 54 34 C44.9 35 44.3 45.7 44.3 51.6 C44.6 54.8 47.1 57.5 46.9 59.6 A6.9 6.9 0 0 1 33.1 59.6 C32.9 57.5 35.4 54.8 35.7 51.6 C35.7 45.7 35.1 35 26 34 Q13 36 0 34 Z"/><path fill="none" stroke="#ff7a1a" stroke-opacity=".25" stroke-width="1" d="M0 0 H1200 V34 Q1194 36 1188 34 C1179.2 35 1178.7 43.9 1178.7 48.8 C1179.0 51.5 1181.1 53.9 1180.9 55.7 A5.9 5.9 0 0 1 1169.1 55.7 C1168.9 53.9 1171.0 51.5 1171.3 48.8 C1171.3 43.9 1170.8 35 1162 34 Q1149 32 1136 34 C1126.3 35 1125.6 53.8 1125.6 67.2 C1125.9 71.2 1129.2 74.8 1128.8 77.5 A8.8 8.8 0 0 1 1111.2 77.5 C1110.8 74.8 1114.1 71.2 1114.4 67.2 C1114.4 53.8 1113.7 35 1104 34 Q1084 37 1064 34 C1054.9 35 1054.3 46.6 1054.3 53.6 C1054.6 56.8 1057.1 59.5 1056.9 61.6 A6.9 6.9 0 0 1 1043.1 61.6 C1042.9 59.5 1045.4 56.8 1045.7 53.6 C1045.7 46.6 1045.1 35 1036 34 Q1014 33 992 34 C982.4 35 981.5 62.8 981.5 85.4 C981.9 90.1 985.7 94.3 985.3 97.5 A10.3 10.3 0 0 1 964.7 97.5 C964.3 94.3 968.1 90.1 968.5 85.4 C968.5 62.8 967.6 35 958 34 Q938 36 918 34 C909.2 35 908.7 43.0 908.7 46.8 C909.0 49.5 911.1 51.9 910.9 53.7 A5.9 5.9 0 0 1 899.1 53.7 C898.9 51.9 901.0 49.5 901.3 46.8 C901.3 43.0 900.8 35 892 34 Q874 31 856 34 C846.0 35 845.3 52.0 845.3 63.8 C845.6 67.6 848.7 71.0 848.3 73.6 A8.3 8.3 0 0 1 831.7 73.6 C831.3 71.0 834.4 67.6 834.7 63.8 C834.7 52.0 834.0 35 824 34 Q797 35 770 34 C760.3 35 759.6 58.3 759.6 77.2 C759.9 81.2 763.2 84.8 762.8 87.5 A8.8 8.8 0 0 1 745.2 87.5 C744.8 84.8 748.1 81.2 748.4 77.2 C748.4 58.3 747.7 35 738 34 Q724 32 710 34 C700.5 35 700.0 47.5 700.0 56.2 C700.3 59.1 702.6 61.7 702.4 63.7 A6.4 6.4 0 0 1 689.6 63.7 C689.4 61.7 691.7 59.1 692.0 56.2 C692.0 47.5 691.5 35 682 34 Q670 37 657 34 C646.4 35 645.4 77.2 645.4 115.6 C645.9 121.0 650.2 125.8 649.8 129.4 A11.8 11.8 0 0 1 626.2 129.4 C625.8 125.8 630.1 121.0 630.6 115.6 C630.6 77.2 629.6 35 619 34 Q608 33 597 34 C587.3 35 586.6 54.7 586.6 69.2 C586.9 73.2 590.2 76.8 589.8 79.5 A8.8 8.8 0 0 1 572.2 79.5 C571.8 76.8 575.1 73.2 575.4 69.2 C575.4 54.7 574.7 35 565 34 Q552 36 539 34 C530.2 35 529.7 43.9 529.7 48.8 C530.0 51.5 532.1 53.9 531.9 55.7 A5.9 5.9 0 0 1 520.1 55.7 C519.9 53.9 522.0 51.5 522.3 48.8 C522.3 43.9 521.8 35 513 34 Q505 32 496 34 C486.4 35 485.5 61.9 485.5 83.4 C485.9 88.1 489.7 92.3 489.3 95.5 A10.3 10.3 0 0 1 468.7 95.5 C468.3 92.3 472.1 88.1 472.5 83.4 C472.5 61.9 471.6 35 462 34 Q454 35 448 34 C438.2 35 437.6 49.3 437.6 59.0 C437.9 62.4 440.6 65.4 440.4 67.6 A7.3 7.3 0 0 1 425.6 67.6 C425.4 65.4 428.1 62.4 428.4 59.0 C428.4 49.3 427.8 35 418 34 Q396 31 374 34 C365.2 35 364.6 47.5 364.6 55.0 C364.9 58.4 367.6 61.4 367.4 63.6 A7.3 7.3 0 0 1 352.6 63.6 C352.4 61.4 355.1 58.4 355.4 55.0 C355.4 47.5 354.8 35 346 34 Q326 36 307 34 C297.0 35 296.2 60.1 296.2 80.0 C296.6 84.5 300.2 88.5 299.8 91.5 A9.8 9.8 0 0 1 280.2 91.5 C279.8 88.5 283.4 84.5 283.8 80.0 C283.8 60.1 283.0 35 273 34 Q246 33 218 34 C209.2 35 208.7 42.1 208.7 44.8 C209.0 47.5 211.1 49.9 210.9 51.7 A5.9 5.9 0 0 1 199.1 51.7 C198.9 49.9 201.0 47.5 201.3 44.8 C201.3 42.1 200.8 35 192 34 Q164 37 136 34 C126.3 35 125.6 55.6 125.6 71.2 C125.9 75.2 129.2 78.8 128.8 81.5 A8.8 8.8 0 0 1 111.2 81.5 C110.8 78.8 114.1 75.2 114.4 71.2 C114.4 55.6 113.7 35 104 34 Q79 32 54 34 C44.9 35 44.3 45.7 44.3 51.6 C44.6 54.8 47.1 57.5 46.9 59.6 A6.9 6.9 0 0 1 33.1 59.6 C32.9 57.5 35.4 54.8 35.7 51.6 C35.7 45.7 35.1 35 26 34 Q13 36 0 34 Z"/><g fill="none" stroke="#f2e6d0" stroke-opacity=".14" stroke-width="1.2" stroke-linecap="round"><path d="M1172.7 40 Q1172.6 43.9 1172.3 49.4"/><path d="M1116.6 40 Q1116.4 53.8 1116.0 68.1"/><path d="M1047.3 40 Q1047.2 46.6 1046.8 54.3"/><path d="M971.0 40 Q970.8 62.8 970.3 86.5"/><path d="M902.7 40 Q902.6 43.0 902.3 47.4"/><path d="M836.8 40 Q836.6 52.0 836.2 64.7"/><path d="M750.6 40 Q750.4 58.3 750.0 78.1"/><path d="M693.5 40 Q693.4 47.5 693.1 56.9"/><path d="M633.4 40 Q633.2 77.2 632.6 116.8"/><path d="M577.6 40 Q577.4 54.7 577.0 70.1"/><path d="M523.7 40 Q523.6 43.9 523.3 49.4"/><path d="M475.0 40 Q474.8 61.9 474.3 84.5"/><path d="M430.1 40 Q430.0 49.3 429.6 59.8"/><path d="M357.1 40 Q357.0 47.5 356.6 55.8"/><path d="M286.2 40 Q286.0 60.1 285.5 81.0"/><path d="M202.7 40 Q202.6 42.1 202.3 45.4"/><path d="M116.6 40 Q116.4 55.6 116.0 72.1"/><path d="M37.3 40 Q37.2 45.7 36.9 52.3"/></g><g fill="#fff" opacity=".45"><ellipse cx="1172.5" cy="53.3" rx="1.3" ry="2.0"/><ellipse cx="1116.2" cy="74.0" rx="1.8" ry="2.9"/><ellipse cx="1047.1" cy="58.9" rx="1.4" ry="2.2"/><ellipse cx="970.6" cy="93.3" rx="2.1" ry="3.4"/><ellipse cx="902.5" cy="51.3" rx="1.3" ry="2.0"/><ellipse cx="836.4" cy="70.2" rx="1.7" ry="2.7"/><ellipse cx="750.2" cy="84.0" rx="1.8" ry="2.9"/><ellipse cx="693.3" cy="61.1" rx="1.3" ry="2.1"/><ellipse cx="633.0" cy="124.6" rx="2.4" ry="3.8"/><ellipse cx="577.2" cy="76.0" rx="1.8" ry="2.9"/><ellipse cx="523.5" cy="53.3" rx="1.3" ry="2.0"/><ellipse cx="474.6" cy="91.3" rx="2.1" ry="3.4"/><ellipse cx="429.9" cy="64.6" rx="1.5" ry="2.4"/><ellipse cx="356.9" cy="60.6" rx="1.5" ry="2.4"/><ellipse cx="285.8" cy="87.5" rx="2.0" ry="3.2"/><ellipse cx="202.5" cy="49.3" rx="1.3" ry="2.0"/><ellipse cx="116.2" cy="78.0" rx="1.8" ry="2.9"/><ellipse cx="37.1" cy="56.9" rx="1.4" ry="2.2"/></g><ellipse class="drop" cx="638" cy="133" rx="5" ry="6.5" fill="#14100b" stroke="#ff7a1a" stroke-opacity=".3" stroke-width=".8"/></svg></div><div class="bar">' + right + '</div><h1><span>Crude</span><span>Awakening</span></h1>' +
-    '<p class="tag">You work at the best trading company in the world. Prove it. New set at midnight London.</p>' + note + '</header>';
+  return '<header class="mast"><div class="bar">' + right + '</div><h1><span>Crude</span> <span>Awakening</span></h1>' +
+    '<p class="tag">You work at the best trading company in the world. Time to mark yourself to market.</p>' + ghMark(m) + note + '</header>';
 }
-const GH_TAUNTS = ["Still bullish on yourself?", "Your desk is watching. No pressure.", "Twenty seconds. No calling a broker.", "Confidence is not a fundamental.", "Yesterday's score has been noted.", "Go on. Take the position.", "You can't hedge this one.", "It's only ten questions. What could go wrong?", "The leaderboard remembers everything.", "Think you know your barrels?", "Loud on the desk. Quiet on the leaderboard?", "Time to mark your knowledge to market."];
+const GH_TAUNTS = ["Still long yourself?", "Your desk can see the leaderboard. No pressure.", "Twenty seconds a question. No calling a broker.", "Confidence is not a fundamental.", "Yesterday's close has been noted.", "Go on. Take the position.", "You can't hedge this one.", "Ten questions. Your mark moves either way.", "The leaderboard has a long memory.", "Everyone's a ten until the set opens.", "Loud on the desk. Quiet on the leaderboard?", "Price discovery starts when you press Play."];
 function ghTaunt(){ const k = S.key || ""; let n = 0; for (const c of k) n = (n * 31 + c.charCodeAt(0)) % 9973; return GH_TAUNTS[n % GH_TAUNTS.length]; }
-function ghVerdict(n){ return n >= 10 ? "Flawless. Suspiciously flawless. We're checking the tape." : n >= 8 ? "Strong book. One or two positions you'd rather not discuss." : n >= 5 ? "Flat on the day. Nobody got hurt, nobody got a bonus." : n >= 2 ? "Deep contango: your knowledge is worth more in the future." : "Dry hole. Tell the desk the Wi-Fi dropped."; }
+function ghVerdict(n){ return n >= 10 ? "Ten out of ten. For once, the self-estimate was the right price." : n >= 8 ? "Strong book. One or two positions you'd rather not discuss." : n >= 5 ? "Flat on the day. Nobody got hurt, nobody got a bonus." : n >= 2 ? "Deep contango: your knowledge is worth more in the future." : "Wide of the market. Tell the desk the Wi-Fi dropped."; }
 function failCard(){
   return '<div class="card"><b>Can&#39;t reach the leaderboard</b><p class="note">Couldn&#39;t connect to the leaderboard. Check your connection and reload the page. If you&#39;re on a work network or using private browsing, try another browser.</p></div>' + rulesCard();
 }

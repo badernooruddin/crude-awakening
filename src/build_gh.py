@@ -76,7 +76,7 @@ _h0, _h1 = d.find("function header(){"), d.find("function failCard(){")
 if _h0 < 0 or _h1 < _h0: sys.exit("build_gh: header() not found")
 d = d[:_h0] + r("gh_header.js").replace("__OILSVG__", r("gh_drip.svg").strip()) + d[_h1:]
 d = must_replace(d, "</head>", '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-    '<link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">\n<style>\n' + r("gh_theme.css") + '</style>\n</head>', "head")
+    '<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet">\n<style>\n' + r("gh_theme.css") + '</style>\n</head>', "head")
 
 d = must_replace(d, """'<div style="height:14px"></div><button class="btn" data-a="play">'""", """'<p class="taunt">' + esc(ghTaunt()) + '</p><button class="btn" data-a="play">'""", "taunt")
 d = must_replace(d, """' today</div>';\n  h += '<div class="grid">'""", """' today</div><p class="verdict">' + esc(ghVerdict(t.n)) + '</p>';\n  h += '<div class="grid">'""", "verdict")
