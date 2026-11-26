@@ -103,3 +103,4 @@ textarea.share{font-family:inherit}
 @media (min-width:592px){#gh-notice{margin:10px auto 26px!important}}
 #orgfoot{opacity:1!important;color:var(--mute)}
 [data-adm-tab]{margin-top:0!important}
+.mtm .you{top:3px;width:12px;height:12px;margin-left:-6px;background:var(--ink);border:2px solid #fff;z-index:3}
