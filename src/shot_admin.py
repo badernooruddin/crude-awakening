@@ -16,6 +16,8 @@ for n, (name, dept) in enumerate(names):
             days[day(i)] = {"a": a, "ids": ids, "done": True, "sc": sum(x["p"] for x in a if x["ok"]), "n": sum(x["ok"] for x in a), "st": 0}
     players["p%d" % n] = {"name": name, "dept": dept, "joined": 1795000000000, "days": days}
 players["p8"]["days"][day(0)] = {"a": [{"c": 0, "ok": True, "ms": 3000, "p": 900, "b": 0}] * 3, "ids": ids, "st": 1, "n": 3, "sc": 2700}
+players["owner"] = {"name": "Ban", "dept": "Research", "joined": 1795000000000, "days": {k: v for k, v in players["p7"]["days"].items() if k != day(0)}}
+notes = {"note-" + day(0): {"text": "Today: refining week starts. Nobody has scored 10/10 yet. Will you?", "at": 0}}
 errs = {"e1": {"stage": "update players", "code": "unavailable", "msg": "Could not reach Cloud Firestore backend", "ua": "Mozilla/5.0 (iPhone)", "at": 0}}
 flags = {"f1": {"qid": "e43", "day": day(1), "at": 0}, "f2": {"qid": "e43", "day": day(1), "at": 0}}
 
@@ -25,7 +27,7 @@ const DATA = __DATA__;
 const now = Date.now(); Object.values(DATA.errs).forEach(e => e.at = now - 3600e3);
 Object.values(DATA.players).forEach(p => Object.values(p.days).forEach(d => { if (d && d.st === 1) d.st = now - 40*60e3; }));
 const store = new Map();
-for (const c of ["players", "errs", "flags"]) for (const [k, v] of Object.entries(DATA[c])) store.set(c + "/" + k, v);
+for (const c of ["players", "errs", "flags", "config"]) for (const [k, v] of Object.entries(DATA[c])) store.set(c + "/" + k, v);
 const clone = x => x === undefined ? undefined : JSON.parse(JSON.stringify(x));
 const parentOf = p => p.split("/").slice(0, -1).join("/");
 const snapDoc = p => { const d = store.get(p); return {id: p.split("/").pop(), exists: !!d, data: () => clone(d)}; };
@@ -46,16 +48,19 @@ window.firebase = {initializeApp(){}, auth: Object.assign(() => auth, {GoogleAut
 
 async def main():
     html = open("docs/index.html", encoding="utf-8").read()
-    js = MOCK.replace("__DATA__", json.dumps({"players": players, "errs": errs, "flags": flags}))
+    js = MOCK.replace("__DATA__", json.dumps({"players": players, "errs": errs, "flags": flags, "config": notes}))
     async with async_playwright() as p:
         b = await p.chromium.launch()
         pg = await b.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=2)
         await pg.route("https://www.gstatic.com/**", lambda r: r.fulfill(body="", content_type="application/javascript"))
         await pg.route("**/bank/index.json", lambda r: r.fulfill(body='{"batches":[]}', content_type="application/json"))
         await pg.route("https://trial.test/", lambda r: r.fulfill(body=html, content_type="text/html"))
+        await pg.route("https://fonts.googleapis.com/**", lambda r: r.fulfill(body="@font-face{font-family:'Nosifer';src:url(https://trial.test/nosifer.woff2) format('woff2')}", content_type="text/css"))
+        await pg.route("https://trial.test/nosifer.woff2", lambda r: r.fulfill(path="/tmp/fnt/node_modules/@fontsource/nosifer/files/nosifer-latin-400-normal.woff2", content_type="font/woff2"))
         await pg.add_init_script(js)
         await pg.goto("https://trial.test/")
-        await pg.wait_for_timeout(1200)
+        await pg.wait_for_timeout(5500)
+        await pg.screenshot(path="/tmp/home.png")
         pg.on("console", lambda m: print("CONSOLE", m.type, m.text[:200]))
         pg.on("pageerror", lambda e: print("PAGEERR", str(e)[:300]))
         print("foot:", (await pg.inner_html("#orgfoot"))[:400])

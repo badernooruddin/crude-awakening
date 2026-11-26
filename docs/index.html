@@ -105,6 +105,43 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
 .mix.on{border-color:var(--amber,#ffb347);box-shadow:0 0 0 1px var(--amber,#ffb347) inset}
 .lvl.l0{background:#5a1f2b;color:#ffc2cc}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
+<style>
+/* ---- Crude Awakening: horror theme (trial build) ----
+   One loud thing: the dripping wordmark lit by a gas flare. Everything else stays quiet bitumen. */
+:root{--bg:#0d0a07;--panel:#16110c;--panel2:#1f1811;--line:#30261b;--text:#efe6d6;--mute:#a69b89;--dim:#73695b;
+--sun:#ff8f2a;--sun2:#ffc27a;--dawn:#e0531a;--red:#e8504a}
+html{background:var(--bg)}
+body{background:
+  radial-gradient(120% 60% at 50% -8%, rgba(255,120,30,.20), rgba(255,120,30,0) 62%),
+  radial-gradient(140% 100% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%),
+  var(--bg);background-attachment:fixed;min-height:100vh}
+.mast{position:relative;text-align:center;margin:2px 0 18px;padding-top:6px}
+.mast .bar{display:flex;justify-content:flex-end;align-items:flex-start;min-height:26px}
+.mast .bar .me,.mast .bar .gear{margin-left:0}
+.mast .me{background:none;border:0;color:var(--mute);font-size:12px;text-align:right;padding:4px 2px 4px 8px}
+.mast h1{font-family:"Nosifer",Inter,system-ui,sans-serif;font-weight:400;font-size:clamp(30px,10.5vw,50px);line-height:1.12;letter-spacing:.01em;margin:6px 0 0;color:#f3e9d8;
+  text-shadow:0 0 22px rgba(255,120,30,.35),0 2px 0 #000}
+.mast h1 span{display:block}
+.mast .tag{margin:12px auto 0;max-width:34ch;color:var(--mute);font-size:14px;line-height:1.5}
+.mast .tag b{color:var(--text);font-weight:700}
+.mast .dnote{margin:14px auto 0;max-width:42ch;padding:10px 14px;border-left:3px solid var(--dawn);background:rgba(224,83,26,.08);text-align:left;font-size:14.5px;line-height:1.5;color:var(--text);border-radius:0 10px 10px 0;white-space:pre-line}
+.mast.compact{display:flex;align-items:center;justify-content:space-between;text-align:left;margin-bottom:12px}
+.mast.compact h1{font-size:18px;margin:0;text-shadow:0 0 12px rgba(255,120,30,.3)}
+.mast.compact h1 span{display:inline}
+.hero{background:linear-gradient(165deg,#1d130c 0%,#2b140b 55%,#47180a 100%);border-color:#4a2414}
+.btn{background:linear-gradient(180deg,#ffa043,#f07a1c);color:#1d0f05;box-shadow:0 0 0 1px rgba(255,150,60,.25),0 6px 22px -8px rgba(255,110,20,.55)}
+.btn.sec{background:var(--panel2);box-shadow:none}
+.btn.ghost{background:none;box-shadow:none}
+.chip.on,.tabs button.on{background:var(--sun);color:#1d0f05}
+#gh-notice{border-color:var(--dawn)!important}
+@media (prefers-reduced-motion:no-preference){
+  .mast:not(.compact) h1{animation:flare 4.8s ease-in-out 1}
+  @keyframes flare{0%{opacity:0;text-shadow:0 0 0 rgba(255,120,30,0)}18%{opacity:.25}22%{opacity:.9}26%{opacity:.4}34%{opacity:1;text-shadow:0 0 40px rgba(255,120,30,.6),0 2px 0 #000}100%{text-shadow:0 0 22px rgba(255,120,30,.35),0 2px 0 #000}}
+}
+textarea.in,select.in{width:100%;display:block;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;color:var(--text);font:inherit;font-size:15px;line-height:1.45}
+textarea.in:focus,select.in:focus{outline:2px solid var(--sun);border-color:transparent}
+</style>
 </head>
 <body>
 <div class="wrap" id="app"></div>
@@ -321,10 +358,15 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
   }
 
   async function viewNotice(){
-    let n = {};
+    let n = {}; const k = TODAY(), k1 = typeof addDays === "function" ? addDays(k, 1) : k, dn = {};
     try { const d = await fs.doc("config/notice").get(); n = d.exists ? d.data() : {}; } catch (e) {}
-    return '<p class="note" style="margin:0 0 8px">Show a short message at the top of the game for everyone (e.g. "Double points Friday!" or "Maintenance tonight").</p><textarea class="in" id="adm-notice" maxlength="200" rows="3" style="resize:vertical">' + esc(n.text || "") + '</textarea>' +
-      '<button class="btn" data-adm-notice="save" style="margin-top:10px">Publish notice</button>' + (n.text ? '<button class="btn sec" data-adm-notice="clear">Remove notice</button>' : '') + (n.at ? '<p class="note" style="margin-top:8px">Live since ' + new Date(n.at).toLocaleString("en-GB") + '</p>' : '');
+    for (const x of [k, k1]) { try { const d = await fs.doc("config/note-" + x).get(); dn[x] = d.exists ? (d.data() || {}).text || "" : ""; } catch (e) { dn[x] = ""; } }
+    const noteBox = (x, label) => '<p class="note" style="margin:10px 0 4px"><b>' + label + '</b> (' + x + ')</p><textarea class="in" id="adm-dn-' + x + '" maxlength="280" rows="3" style="resize:vertical" placeholder="e.g. Today\'s theme: refining. Nobody has scored 10/10 yet.">' + esc(dn[x]) + '</textarea><div style="margin-top:6px">' +
+      smallBtn("Save " + label.toLowerCase() + "'s note", 'data-adm-dnote="' + x + '"') + (dn[x] ? smallBtn("Remove", 'data-adm-dnote-clear="' + x + '"') : "") + '</div>';
+    return '<p class="note" style="margin:0 0 4px"><b>Daily note</b>: shown under the title for that day only, then it disappears at midnight London.</p>' + noteBox(k, "Today") + noteBox(k1, "Tomorrow") +
+      '<hr style="border:0;border-top:1px solid var(--line);margin:16px 0">' +
+      '<p class="note" style="margin:0 0 8px"><b>Banner</b>: a short message at the very top for everyone until you remove it (e.g. "Maintenance tonight").</p><textarea class="in" id="adm-notice" maxlength="200" rows="3" style="resize:vertical">' + esc(n.text || "") + '</textarea>' +
+      '<button class="btn" data-adm-notice="save" style="margin-top:10px">Publish banner</button>' + (n.text ? '<button class="btn sec" data-adm-notice="clear">Remove banner</button>' : '') + (n.at ? '<p class="note" style="margin-top:8px">Live since ' + new Date(n.at).toLocaleString("en-GB") + '</p>' : '');
   }
 
   async function admRender(){
@@ -368,6 +410,11 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
         for (const e of ADM.errs) await fs.doc("errs/" + e.id).delete().catch(() => {});
         ADM.arm = null; await admLoad(); return admRender();
       }
+      if (ds.admDnote || ds.admDnoteClear) {
+        const x = ds.admDnote || ds.admDnoteClear, text = ds.admDnote ? (document.getElementById("adm-dn-" + x).value || "").trim().slice(0, 280) : "";
+        await retry("admin daily note", () => fs.doc("config/note-" + x).set({text, at: Date.now()}));
+        return admRender();
+      }
       if (ds.admNotice) {
         const text = ds.admNotice === "save" ? (document.getElementById("adm-notice").value || "").trim().slice(0, 200) : "";
         await retry("admin notice", () => fs.doc("config/notice").set({text, at: Date.now()}));
@@ -375,10 +422,26 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
       }
     } catch (e) { logErr("admin action", e); const b = document.getElementById("adm-body"); if (b) b.insertAdjacentHTML("afterbegin", '<p class="note" style="color:#ff8a8a">That didn\'t work (' + esc(e && e.code || "error") + '). Try again.</p>'); }
   }
-  document.addEventListener("click", e => { const t = e.target && e.target.closest && e.target.closest("[data-adm-tab],[data-adm-sort],[data-adm-csv],[data-adm-edit],[data-adm-save],[data-adm-reset],[data-adm-del],[data-adm-unflag],[data-adm-clearerrs],[data-adm-notice]"); if (t) admAct(t); });
+  document.addEventListener("click", e => { const t = e.target && e.target.closest && e.target.closest("[data-adm-tab],[data-adm-sort],[data-adm-csv],[data-adm-edit],[data-adm-save],[data-adm-reset],[data-adm-del],[data-adm-unflag],[data-adm-clearerrs],[data-adm-notice],[data-adm-dnote],[data-adm-dnote-clear]"); if (t) admAct(t); });
+
+  // Daily note under the title: config/note-YYYY-MM-DD (London date), switches over at midnight
+  let NOTEDAY = null, NOTEOFF = null;
+  function watchDailyNote(){
+    const k = TODAY(); if (k === NOTEDAY) return; NOTEDAY = k;
+    if (NOTEOFF) { try { NOTEOFF(); } catch (e) {} }
+    window.GH_NOTE = ""; window.dispatchEvent(new Event("gh-rerender"));
+    try {
+      NOTEOFF = fs.doc("config/note-" + k).onSnapshot(d => {
+        const t = d.exists ? String((d.data() || {}).text || "").trim() : "";
+        if (t !== window.GH_NOTE) { window.GH_NOTE = t; window.dispatchEvent(new Event("gh-rerender")); }
+      }, () => {});
+    } catch (e) {}
+  }
+  setInterval(() => { if (NOTEDAY) watchDailyNote(); }, 60000);
 
   // Notice banner for everyone
   function watchNotice(){
+    watchDailyNote();
     try {
       fs.doc("config/notice").onSnapshot(d => {
         const n = d.exists ? d.data() : null; let el = document.getElementById("gh-notice");
@@ -1445,10 +1508,14 @@ function render(){
   if (f) { const el = document.getElementById(f); if (el) el.focus(); }
   const nm = document.getElementById("in-name"); if (nm) nm.oninput = e => { S.edit.name = e.target.value; };
 }
+window.addEventListener("gh-rerender", () => { try { if (S.view !== "play") render(); } catch (e) {} });
 function header(){
   const m = me(); const st = m ? streak(m.days || {}, S.key) : 0;
-  return '<div class="top"><div class="sunlogo"></div><div><h1>Crude Awakening</h1><small>Daily oil &amp; gas trivia · new set at midnight London</small></div>' +
-    (S.owner && m && m.name && S.view !== "play" ? '<button class="gear" data-a="admin" title="Organiser tools">⚙️</button>' : '') + (m && m.name && S.view !== "play" ? '<button class="me" data-a="profile">' + esc(m.name) + (st ? '<br><span class="fire">🔥 ' + st + '</span>' : '') + '</button>' : '') + '</div>';
+  const right = (S.owner && m && m.name && S.view !== "play" ? '<button class="gear" data-a="admin" title="Organiser tools">⚙️</button>' : '') + (m && m.name && S.view !== "play" ? '<button class="me" data-a="profile">' + esc(m.name) + (st ? '<br><span class="fire">🔥 ' + st + '</span>' : '') + '</button>' : '');
+  if (S.view === "play") return '<div class="mast compact"><h1><span>Crude </span><span>Awakening</span></h1></div>';
+  const note = window.GH_NOTE ? '<p class="dnote">' + esc(window.GH_NOTE) + '</p>' : '';
+  return '<header class="mast"><div class="bar">' + right + '</div><h1><span>Crude</span><span>Awakening</span></h1>' +
+    '<p class="tag">You work in oil. You think you know it. Ten questions a day say otherwise. New set at midnight London.</p>' + note + '</header>';
 }
 function failCard(){
   return '<div class="card"><b>Can&#39;t reach the leaderboard</b><p class="note">Couldn&#39;t connect to the leaderboard. Check your connection and reload the page. If you&#39;re on a work network or using private browsing, try another browser.</p></div>' + rulesCard();

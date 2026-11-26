@@ -180,6 +180,14 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   D.document.getElementById("adm-notice").value = "Double points Friday!"; click(D, '[data-adm-notice="save"]'); await sleep(250);
   const N = win(null); await sleep(250);
   ok(N.document.getElementById("gh-notice") && N.document.getElementById("gh-notice").textContent.includes("Double points Friday!"), "published notice appears for players");
+  // daily note under the title
+  click(D, '[data-adm-tab="notice"]'); await sleep(250);
+  D.document.getElementById("adm-dn-" + lon).value = "Refining week starts."; click(D, '[data-adm-dnote="' + lon + '"]'); await sleep(300);
+  const N2 = win(null); await sleep(300);
+  const dn = N2.document.querySelector(".mast .dnote");
+  ok(dn && dn.textContent === "Refining week starts.", "today's daily note shows under the title for players");
+  ok(store.get("config/note-" + lon).text === "Refining week starts.", "daily note saved for today's date only");
+  ok(/Crude/.test(N2.document.querySelector(".mast h1").textContent), "themed masthead renders");
   // let a player replay today
   click(D, '[data-adm-tab="players"]'); await sleep(250);
   const ali = [...store.keys()].find(k => k.startsWith("players/") && store.get(k).name === "Ali").slice(8);

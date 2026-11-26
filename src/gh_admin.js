@@ -123,10 +123,15 @@
   }
 
   async function viewNotice(){
-    let n = {};
+    let n = {}; const k = TODAY(), k1 = typeof addDays === "function" ? addDays(k, 1) : k, dn = {};
     try { const d = await fs.doc("config/notice").get(); n = d.exists ? d.data() : {}; } catch (e) {}
-    return '<p class="note" style="margin:0 0 8px">Show a short message at the top of the game for everyone (e.g. "Double points Friday!" or "Maintenance tonight").</p><textarea class="in" id="adm-notice" maxlength="200" rows="3" style="resize:vertical">' + esc(n.text || "") + '</textarea>' +
-      '<button class="btn" data-adm-notice="save" style="margin-top:10px">Publish notice</button>' + (n.text ? '<button class="btn sec" data-adm-notice="clear">Remove notice</button>' : '') + (n.at ? '<p class="note" style="margin-top:8px">Live since ' + new Date(n.at).toLocaleString("en-GB") + '</p>' : '');
+    for (const x of [k, k1]) { try { const d = await fs.doc("config/note-" + x).get(); dn[x] = d.exists ? (d.data() || {}).text || "" : ""; } catch (e) { dn[x] = ""; } }
+    const noteBox = (x, label) => '<p class="note" style="margin:10px 0 4px"><b>' + label + '</b> (' + x + ')</p><textarea class="in" id="adm-dn-' + x + '" maxlength="280" rows="3" style="resize:vertical" placeholder="e.g. Today\'s theme: refining. Nobody has scored 10/10 yet.">' + esc(dn[x]) + '</textarea><div style="margin-top:6px">' +
+      smallBtn("Save " + label.toLowerCase() + "'s note", 'data-adm-dnote="' + x + '"') + (dn[x] ? smallBtn("Remove", 'data-adm-dnote-clear="' + x + '"') : "") + '</div>';
+    return '<p class="note" style="margin:0 0 4px"><b>Daily note</b>: shown under the title for that day only, then it disappears at midnight London.</p>' + noteBox(k, "Today") + noteBox(k1, "Tomorrow") +
+      '<hr style="border:0;border-top:1px solid var(--line);margin:16px 0">' +
+      '<p class="note" style="margin:0 0 8px"><b>Banner</b>: a short message at the very top for everyone until you remove it (e.g. "Maintenance tonight").</p><textarea class="in" id="adm-notice" maxlength="200" rows="3" style="resize:vertical">' + esc(n.text || "") + '</textarea>' +
+      '<button class="btn" data-adm-notice="save" style="margin-top:10px">Publish banner</button>' + (n.text ? '<button class="btn sec" data-adm-notice="clear">Remove banner</button>' : '') + (n.at ? '<p class="note" style="margin-top:8px">Live since ' + new Date(n.at).toLocaleString("en-GB") + '</p>' : '');
   }
 
   async function admRender(){
@@ -170,6 +175,11 @@
         for (const e of ADM.errs) await fs.doc("errs/" + e.id).delete().catch(() => {});
         ADM.arm = null; await admLoad(); return admRender();
       }
+      if (ds.admDnote || ds.admDnoteClear) {
+        const x = ds.admDnote || ds.admDnoteClear, text = ds.admDnote ? (document.getElementById("adm-dn-" + x).value || "").trim().slice(0, 280) : "";
+        await retry("admin daily note", () => fs.doc("config/note-" + x).set({text, at: Date.now()}));
+        return admRender();
+      }
       if (ds.admNotice) {
         const text = ds.admNotice === "save" ? (document.getElementById("adm-notice").value || "").trim().slice(0, 200) : "";
         await retry("admin notice", () => fs.doc("config/notice").set({text, at: Date.now()}));
@@ -177,10 +187,26 @@
       }
     } catch (e) { logErr("admin action", e); const b = document.getElementById("adm-body"); if (b) b.insertAdjacentHTML("afterbegin", '<p class="note" style="color:#ff8a8a">That didn\'t work (' + esc(e && e.code || "error") + '). Try again.</p>'); }
   }
-  document.addEventListener("click", e => { const t = e.target && e.target.closest && e.target.closest("[data-adm-tab],[data-adm-sort],[data-adm-csv],[data-adm-edit],[data-adm-save],[data-adm-reset],[data-adm-del],[data-adm-unflag],[data-adm-clearerrs],[data-adm-notice]"); if (t) admAct(t); });
+  document.addEventListener("click", e => { const t = e.target && e.target.closest && e.target.closest("[data-adm-tab],[data-adm-sort],[data-adm-csv],[data-adm-edit],[data-adm-save],[data-adm-reset],[data-adm-del],[data-adm-unflag],[data-adm-clearerrs],[data-adm-notice],[data-adm-dnote],[data-adm-dnote-clear]"); if (t) admAct(t); });
+
+  // Daily note under the title: config/note-YYYY-MM-DD (London date), switches over at midnight
+  let NOTEDAY = null, NOTEOFF = null;
+  function watchDailyNote(){
+    const k = TODAY(); if (k === NOTEDAY) return; NOTEDAY = k;
+    if (NOTEOFF) { try { NOTEOFF(); } catch (e) {} }
+    window.GH_NOTE = ""; window.dispatchEvent(new Event("gh-rerender"));
+    try {
+      NOTEOFF = fs.doc("config/note-" + k).onSnapshot(d => {
+        const t = d.exists ? String((d.data() || {}).text || "").trim() : "";
+        if (t !== window.GH_NOTE) { window.GH_NOTE = t; window.dispatchEvent(new Event("gh-rerender")); }
+      }, () => {});
+    } catch (e) {}
+  }
+  setInterval(() => { if (NOTEDAY) watchDailyNote(); }, 60000);
 
   // Notice banner for everyone
   function watchNotice(){
+    watchDailyNote();
     try {
       fs.doc("config/notice").onSnapshot(d => {
         const n = d.exists ? d.data() : null; let el = document.getElementById("gh-notice");
