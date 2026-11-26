@@ -21,7 +21,7 @@ function makeFirebase(user){
   };
   const docRef = p => ({
     parent: {id: parentOf(p)},
-    set: async (d, o) => { if (FAILNEXT.n > 0 && p.startsWith("players/")) { FAILNEXT.n--; throw {code: FAILNEXT.code}; } writes.push([auth.currentUser && auth.currentUser.uid, p]); if (o && o.merge && store.has(p)) deep(store.get(p), d); else store.set(p, clone(d)); notify(p); },
+    set: async (d, o) => { const nested = v => Array.isArray(v) ? v.some(x => Array.isArray(x) || nested(x)) : (v && typeof v === "object" ? Object.values(v).some(nested) : false); if (nested(d)) throw {code: "invalid-argument", message: "Nested arrays are not supported"}; if (FAILNEXT.n > 0 && p.startsWith("players/")) { FAILNEXT.n--; throw {code: FAILNEXT.code}; } writes.push([auth.currentUser && auth.currentUser.uid, p]); if (o && o.merge && store.has(p)) deep(store.get(p), d); else store.set(p, clone(d)); notify(p); },
     delete: async () => { store.delete(p); notify(p); },
     get: async () => snapDoc(p),
     update: async d => { if (!store.has(p)) throw {code: "not-found"}; Object.assign(store.get(p), clone(d)); notify(p); },
@@ -158,6 +158,15 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   ok(KB.uids.includes(q[1]) && KB.uids.includes(q[2]), "their browsers are recorded on the kept player");
   const Q3b = win(Q3.__auth.currentUser); await sleep(250);
   ok(!Q3b.document.getElementById("in-name") && txt(Q3b).includes("Bo"), "a merged browser comes back as the kept player");
+  // Organiser can change the difficulty mix (Firestore forbids nested arrays, so mixHist must be converted)
+  const MX = OWN(); await sleep(250);
+  click(MX, '[data-a="admin"]'); await sleep(120);
+  click(MX, '[data-a="setmix"][data-v="hard"]'); await sleep(300);
+  const cfg = store.get("config/settings");
+  ok(cfg && cfg.mix === "hard" && Array.isArray(cfg.mixHist) && cfg.mixHist.every(x => !Array.isArray(x)), "organiser can switch to Hard (saved without nested arrays)");
+  const MX2 = OWN(); await sleep(250); click(MX2, '[data-a="admin"]'); await sleep(120);
+  const onBtn = MX2.document.querySelector('[data-a="setmix"].on');
+  ok(onBtn && onBtn.dataset.v === "hard", "the Hard setting reads back correctly after reload (" + (onBtn && onBtn.dataset.v) + ")");
   // Organiser dashboard
   const D = OWN(); await sleep(250);
   ok(!!D.document.getElementById("admopen") && !A.document.getElementById("admopen"), "dashboard link for organisers only");

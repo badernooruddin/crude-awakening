@@ -134,11 +134,15 @@ details summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:700}
       }
     }
   };
+  // Firestore can't store lists inside lists; the game keeps mixHist as [[fromDate, mix], ...].
+  // Store it as [{from, mix}, ...] and convert back when reading.
+  const enc = d => (d && Array.isArray(d.mixHist)) ? Object.assign({}, d, {mixHist: d.mixHist.map(x => Array.isArray(x) ? {from: x[0], mix: x[1]} : x)}) : d;
+  const dec = d => (d && Array.isArray(d.mixHist)) ? Object.assign({}, d, {mixHist: d.mixHist.map(x => x && !Array.isArray(x) && typeof x === "object" ? [x.from, x.mix] : x)}) : d;
   const wrapDoc = ref => ({
-    set: data => retry("set " + ref.parent.id, () => ref.set(data)),
-    update: patch => retry("update " + ref.parent.id, () => ref.set(patch, {merge: true})),   // Claude db update = deep merge
+    set: data => retry("set " + ref.parent.id, () => ref.set(enc(data))),
+    update: patch => retry("update " + ref.parent.id, () => ref.set(enc(patch), {merge: true})),   // Claude db update = deep merge
     delete: () => ref.delete(),
-    onSnapshot: (ok, err) => ref.onSnapshot(s => ok({id: s.id, exists: s.exists, data: () => s.data()}), err)
+    onSnapshot: (ok, err) => ref.onSnapshot(s => ok({id: s.id, exists: s.exists, data: () => dec(s.data())}), err)
   });
   const wrapCol = ref => ({
     add: data => ref.add(data),
