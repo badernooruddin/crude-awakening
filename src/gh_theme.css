@@ -104,3 +104,19 @@ textarea.share{font-family:inherit}
 #orgfoot{opacity:1!important;color:var(--mute)}
 [data-adm-tab]{margin-top:0!important}
 .mtm .you{top:3px;width:12px;height:12px;margin-left:-6px;background:var(--ink);border:2px solid #fff;z-index:3}
+/* smaller masthead */
+.mast{padding:6px 0 14px}
+.mast .bar{min-height:24px}
+.mast h1{font-size:clamp(34px,10vw,52px);line-height:.92}
+.mast h1 span{display:inline}
+.mast .tag{margin-top:6px;font-size:14px;line-height:1.4}
+.mtm{margin-top:12px}
+.mtm .mk{margin-top:0;align-items:flex-end}
+.mtm .mk b{font-size:34px}
+.mtm .mk small{font-size:12px}
+.mtm .scale{margin:8px 9px 0;height:14px}
+.mtm .scale::before{top:6px}
+.mtm .scale::after{display:none}
+.mtm .scale .dot{width:14px;height:14px;margin-left:-7px;top:0}
+.mtm .you{top:2px;width:10px;height:10px;margin-left:-5px}
+.mast .dnote{margin-top:12px;padding:8px 12px;font-size:14px}

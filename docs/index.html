@@ -213,6 +213,22 @@ textarea.share{font-family:inherit}
 #orgfoot{opacity:1!important;color:var(--mute)}
 [data-adm-tab]{margin-top:0!important}
 .mtm .you{top:3px;width:12px;height:12px;margin-left:-6px;background:var(--ink);border:2px solid #fff;z-index:3}
+/* smaller masthead */
+.mast{padding:6px 0 14px}
+.mast .bar{min-height:24px}
+.mast h1{font-size:clamp(34px,10vw,52px);line-height:.92}
+.mast h1 span{display:inline}
+.mast .tag{margin-top:6px;font-size:14px;line-height:1.4}
+.mtm{margin-top:12px}
+.mtm .mk{margin-top:0;align-items:flex-end}
+.mtm .mk b{font-size:34px}
+.mtm .mk small{font-size:12px}
+.mtm .scale{margin:8px 9px 0;height:14px}
+.mtm .scale::before{top:6px}
+.mtm .scale::after{display:none}
+.mtm .scale .dot{width:14px;height:14px;margin-left:-7px;top:0}
+.mtm .you{top:2px;width:10px;height:10px;margin-left:-5px}
+.mast .dnote{margin-top:12px;padding:8px 12px;font-size:14px}
 </style>
 </head>
 <body>
@@ -1593,14 +1609,13 @@ function ghMark(m){
   const k = S.key, P = Object.values(S.players || {});
   let n = 0, s = 0; P.forEach(p => { const d = p.days && p.days[k]; if (d && d.done && typeof d.n === "number") { n++; s += d.n; } });
   const mine = m && m.days && m.days[k] && m.days[k].done && typeof m.days[k].n === "number" ? m.days[k].n : null;
-  const top = '<div class="row own"><span>You, by your own estimate</span><b>10.0</b></div>';
-  if (!n) return '<div class="mtm">' + top + '<div class="scale"><i class="ring"></i></div><div class="row mk"><span>Marked to market</span><em>no trades yet today</em></div></div>';
+  const top = '';
+  if (!n) return '<div class="mtm">' + top + '<div class="row mk"><span>Marked to market</span><em>no trades yet today</em></div></div>';
   const v = Math.round(s / n * 10) / 10;
   try { if (!window.GH_T0 && window.requestAnimationFrame && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) { window.GH_T0 = Date.now(); requestAnimationFrame(ghMarkRun); } } catch (e) {}
   const you = mine === null ? '' : '<i class="you" style="left:' + (mine * 10) + '%" title="You today: ' + mine + '/10"></i>';
   const sub = 'today\'s average across ' + n + (n === 1 ? ' player' : ' players') + (mine === null ? '' : ' · you: ' + mine + '/10');
-  return '<div class="mtm" data-v="' + v + '" style="--p:' + (v * 10) + '%">' + top + '<div class="scale"><i class="ring"></i><i class="dot"></i>' + you + '</div>' +
-    '<div class="row mk"><span>Marked to market <small>' + sub + '</small></span><b>' + v.toFixed(1) + '</b></div></div>';
+  return '<div class="mtm" data-v="' + v + '" style="--p:' + (v * 10) + '%">' + top + '<div class="row mk"><span>Marked to market <small>' + sub + '</small></span><b>' + v.toFixed(1) + '</b></div><div class="scale"><i class="dot"></i>' + you + '</div></div>';
 }
 function header(){
   const m = me(); const st = m ? streak(m.days || {}, S.key) : 0;

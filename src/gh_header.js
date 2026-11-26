@@ -11,14 +11,13 @@ function ghMark(m){
   const k = S.key, P = Object.values(S.players || {});
   let n = 0, s = 0; P.forEach(p => { const d = p.days && p.days[k]; if (d && d.done && typeof d.n === "number") { n++; s += d.n; } });
   const mine = m && m.days && m.days[k] && m.days[k].done && typeof m.days[k].n === "number" ? m.days[k].n : null;
-  const top = '<div class="row own"><span>You, by your own estimate</span><b>10.0</b></div>';
-  if (!n) return '<div class="mtm">' + top + '<div class="scale"><i class="ring"></i></div><div class="row mk"><span>Marked to market</span><em>no trades yet today</em></div></div>';
+  const top = '';
+  if (!n) return '<div class="mtm">' + top + '<div class="row mk"><span>Marked to market</span><em>no trades yet today</em></div></div>';
   const v = Math.round(s / n * 10) / 10;
   try { if (!window.GH_T0 && window.requestAnimationFrame && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) { window.GH_T0 = Date.now(); requestAnimationFrame(ghMarkRun); } } catch (e) {}
   const you = mine === null ? '' : '<i class="you" style="left:' + (mine * 10) + '%" title="You today: ' + mine + '/10"></i>';
   const sub = 'today\'s average across ' + n + (n === 1 ? ' player' : ' players') + (mine === null ? '' : ' · you: ' + mine + '/10');
-  return '<div class="mtm" data-v="' + v + '" style="--p:' + (v * 10) + '%">' + top + '<div class="scale"><i class="ring"></i><i class="dot"></i>' + you + '</div>' +
-    '<div class="row mk"><span>Marked to market <small>' + sub + '</small></span><b>' + v.toFixed(1) + '</b></div></div>';
+  return '<div class="mtm" data-v="' + v + '" style="--p:' + (v * 10) + '%">' + top + '<div class="row mk"><span>Marked to market <small>' + sub + '</small></span><b>' + v.toFixed(1) + '</b></div><div class="scale"><i class="dot"></i>' + you + '</div></div>';
 }
 function header(){
   const m = me(); const st = m ? streak(m.days || {}, S.key) : 0;
