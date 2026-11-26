@@ -192,6 +192,7 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   ok(!!P9.document.querySelector(".taunt") && P9.document.querySelector(".taunt").textContent.length > 5, "a daily taunt shows above Play");
   ok(await playAll(P9, () => 0), "tester finishes the set"); await sleep(200);
   const vd = P9.document.querySelector(".verdict");
+  ok(!!P9.document.querySelector("table.lb") && /Verdict Tester/.test(P9.document.querySelector("table.lb").textContent), "leaderboard shows on the result screen straight after finishing");
   ok(vd && /Flawless|Strong book|Flat on the day|contango|Dry hole/.test(vd.textContent), "result screen shows a score verdict (" + (vd ? vd.textContent.slice(0, 30) : "none") + ")");
   // let a player replay today
   click(D, '[data-adm-tab="players"]'); await sleep(250);

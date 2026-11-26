@@ -79,6 +79,10 @@ d = must_replace(d, "</head>", '<link rel="preconnect" href="https://fonts.googl
     '<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Instrument+Sans:wght@400..700&display=swap" rel="stylesheet">\n<style>\n' + r("gh_theme.css") + '</style>\n</head>', "head")
 
 d = must_replace(d, """'<div style="height:14px"></div><button class="btn" data-a="play">'""", """'<p class="taunt">' + esc(ghTaunt()) + '</p><button class="btn" data-a="play">'""", "taunt")
+# Result screen: show the leaderboard right under your score (it used to sit behind a faint "Leaderboard" link,
+# so players who had just finished couldn't see it until they tapped that or reloaded).
+d = must_replace(d, """h += '<button class="btn ghost" data-a="home">Leaderboard</button></div>';""",
+    """h += '</div>' + boardsCard(B, true);""", "result leaderboard")
 d = must_replace(d, """' today</div>';\n  h += '<div class="grid">'""", """' today</div><p class="verdict">' + esc(ghVerdict(t.n)) + '</p>';\n  h += '<div class="grid">'""", "verdict")
 
 # 3) Firebase adapter: the game expects a Claude-style db (update = deep merge, set = replace)

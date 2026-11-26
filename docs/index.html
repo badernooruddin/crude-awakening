@@ -1712,7 +1712,7 @@ function resultView(){
   h += '<div class="grid">' + d.a.map(x => !x.ok ? "🟥" : x.ms <= 8000 ? "🟩" : "🟨").join("") + '</div>';
   h += '<button class="btn" data-a="share">Copy result to share</button>';
   if (S.shareOpen) h += '<textarea class="share" readonly>' + esc(shareText(d, k)) + '</textarea><div class="note">Copy this and paste it into your team chat.</div>';
-  h += '<button class="btn ghost" data-a="home">Leaderboard</button></div>';
+  h += '</div>' + boardsCard(B, true);
   if (S.owner) h += ownerBar();
   // most missed
   if (others.length >= 2) {
