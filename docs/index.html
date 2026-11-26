@@ -269,9 +269,12 @@ textarea.share{font-family:inherit}
     delete: () => ref.delete(),
     onSnapshot: (ok, err) => ref.onSnapshot(s => ok({id: s.id, exists: s.exists, data: () => dec(s.data())}), err)
   });
+  // Team renamed: "Commercial" is now "Biz Dev" (older player records still store the old name)
+  const teamFix = x => (x && x.dept === "Commercial" ? Object.assign({}, x, {dept: "Biz Dev"}) : x);
+  window.GH_TEAMFIX = teamFix;
   const wrapCol = ref => ({
     add: data => ref.add(data),
-    onSnapshot: (ok, err) => ref.onSnapshot(s => ok({docs: s.docs.map(x => ({id: x.id, data: () => x.data()}))}), err)
+    onSnapshot: (ok, err) => ref.onSnapshot(s => ok({docs: s.docs.map(x => ({id: x.id, data: () => (ref.id === "players" ? teamFix(x.data()) : x.data())}))}), err)
   });
   // Extra question batches: published as static files in the repo (docs/bank/*.json) by the daily top-up,
   // merged with any bank/* docs in Firestore. The game appends batches in (added, id) order, so past sets never change.
@@ -350,7 +353,7 @@ textarea.share{font-family:inherit}
       fs.collection("errs").get().catch(() => ({docs: []})),
       fs.collection("flags").get().catch(() => ({docs: []}))
     ]);
-    ADM.players = ps.docs.map(d => Object.assign({id: d.id}, d.data())).filter(p => p.name);
+    ADM.players = ps.docs.map(d => Object.assign({id: d.id}, teamFix(d.data()))).filter(p => p.name);
     ADM.errs = es.docs.map(d => Object.assign({id: d.id}, d.data())).sort((a, b) => (b.at || 0) - (a.at || 0));
     ADM.flags = fl.docs.map(d => Object.assign({id: d.id}, d.data()));
   }
@@ -414,7 +417,7 @@ textarea.share{font-family:inherit}
     if (ADM.edit) {
       const p = ADM.players.find(x => x.id === ADM.edit);
       if (p) h += '<div class="card" style="margin-top:12px"><b>Edit ' + esc(p.name) + '</b><p class="note" style="margin:8px 0 4px">Display name</p><input class="in" id="adm-name" maxlength="24" value="' + esc(p.name) + '"><p class="note" style="margin:8px 0 4px">Team</p><select class="in" id="adm-dept">' +
-        ["Trading", "Research", "Operations", "Engineering", "Commercial", "Finance", "Other"].map(t => '<option' + (t === p.dept ? " selected" : "") + '>' + t + '</option>').join("") + '</select><button class="btn" data-adm-save="' + esc(p.id) + '" style="margin-top:10px">Save</button></div>';
+        ["Trading", "Research", "Operations", "Engineering", "Biz Dev", "Finance", "Other"].map(t => '<option' + (t === p.dept ? " selected" : "") + '>' + t + '</option>').join("") + '</select><button class="btn" data-adm-save="' + esc(p.id) + '" style="margin-top:10px">Save</button></div>';
     }
     h += '<p class="note" style="margin-top:10px">“Let replay today” clears today\'s attempt so that player can play the set again (use it for genuine technical problems). “Remove” deletes the player and their scores.</p>';
     return h;
@@ -1433,7 +1436,7 @@ function rebuildPool(){
 }
 rebuildPool();
 const LET = ["A","B","C","D"];
-const DEPTS = ["Trading","Research","Operations","Engineering","Commercial","Finance","Other"];
+const DEPTS = ["Trading","Research","Operations","Engineering","Biz Dev","Finance","Other"];
 const LVL = {0: "Expert", 1: "Easy", 2: "Medium", 3: "Hard"};
 const $app = document.getElementById("app");
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));

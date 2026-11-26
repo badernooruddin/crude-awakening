@@ -30,6 +30,7 @@ function makeFirebase(user){
   const fsx = {
     doc: p => docRef(p),
     collection: c => ({
+      id: c.split("/").pop(),
       add: async d => { const p = c + "/" + Math.random().toString(36).slice(2); await docRef(p).set(d); },
       get: async () => snapCol(c),
       // flags are organiser-only in the rules: the mock lets only the test organiser account read them
@@ -206,6 +207,13 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   ok(store.get("players/" + ali).name === "Ali" && dtxt().includes("already uses that name"), "rename to an existing name is refused");
   D.document.getElementById("adm-name").value = "Ali K"; click(D, '[data-adm-save="' + ali + '"]'); await sleep(350);
   ok(store.get("players/" + ali).name === "Ali K", "rename works");
+  // team rename: an old "Commercial" record shows as Biz Dev, and Biz Dev is offered when joining
+  store.set("players/old-comm", {name: "Old Comm", dept: "Commercial", joined: Date.now(), days: {[lon]: {done: true, sc: 5000, n: 5, a: [], ids: []}}});
+  const T1 = win(null); await sleep(250);
+  ok(!!T1.document.querySelector('[data-a="dept"][data-v="Biz Dev"]') && !T1.document.querySelector('[data-a="dept"][data-v="Commercial"]'), "join form offers Biz Dev, not Commercial");
+  await join(T1, "Team Tester", "Biz Dev"); await sleep(150);
+  const oc = [...T1.document.querySelectorAll("table.lb tr")].find(r => /Old Comm/.test(r.textContent));
+  ok(oc && /Biz Dev/.test(oc.textContent) && !/Commercial/.test(txt(T1)), "old Commercial player is shown under Biz Dev");
   // a wrong code is refused
   const P3 = win(null); await sleep(150); click(P3, "#lnkopen"); await sleep(60); P3.document.getElementById("lnkin").value = "ZZZZZZZZ"; click(P3, "#lnkuse"); await sleep(200);
   ok(P3.document.getElementById("lnkmsg").textContent.includes("isn't valid"), "unknown code is refused with a clear message");

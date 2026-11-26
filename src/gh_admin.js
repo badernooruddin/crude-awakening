@@ -27,7 +27,7 @@
       fs.collection("errs").get().catch(() => ({docs: []})),
       fs.collection("flags").get().catch(() => ({docs: []}))
     ]);
-    ADM.players = ps.docs.map(d => Object.assign({id: d.id}, d.data())).filter(p => p.name);
+    ADM.players = ps.docs.map(d => Object.assign({id: d.id}, teamFix(d.data()))).filter(p => p.name);
     ADM.errs = es.docs.map(d => Object.assign({id: d.id}, d.data())).sort((a, b) => (b.at || 0) - (a.at || 0));
     ADM.flags = fl.docs.map(d => Object.assign({id: d.id}, d.data()));
   }
@@ -91,7 +91,7 @@
     if (ADM.edit) {
       const p = ADM.players.find(x => x.id === ADM.edit);
       if (p) h += '<div class="card" style="margin-top:12px"><b>Edit ' + esc(p.name) + '</b><p class="note" style="margin:8px 0 4px">Display name</p><input class="in" id="adm-name" maxlength="24" value="' + esc(p.name) + '"><p class="note" style="margin:8px 0 4px">Team</p><select class="in" id="adm-dept">' +
-        ["Trading", "Research", "Operations", "Engineering", "Commercial", "Finance", "Other"].map(t => '<option' + (t === p.dept ? " selected" : "") + '>' + t + '</option>').join("") + '</select><button class="btn" data-adm-save="' + esc(p.id) + '" style="margin-top:10px">Save</button></div>';
+        ["Trading", "Research", "Operations", "Engineering", "Biz Dev", "Finance", "Other"].map(t => '<option' + (t === p.dept ? " selected" : "") + '>' + t + '</option>').join("") + '</select><button class="btn" data-adm-save="' + esc(p.id) + '" style="margin-top:10px">Save</button></div>';
     }
     h += '<p class="note" style="margin-top:10px">“Let replay today” clears today\'s attempt so that player can play the set again (use it for genuine technical problems). “Remove” deletes the player and their scores.</p>';
     return h;

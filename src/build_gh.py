@@ -66,6 +66,10 @@ d = must_replace(d, 'setTimeout(() => { if (!S.ready) { S.ready = true; S.failed
 d = must_replace(d, 'S.players = m; S.loaded = true; render();',
     'const first = !S.loaded; S.players = m; S.loaded = true; const joining = !me() || !me().name || S.view === "profile"; if (first || !joining) render();', "players render")
 
+# 2b2) Team list: "Commercial" renamed "Biz Dev" (trial)
+d = must_replace(d, 'const DEPTS = ["Trading","Research","Operations","Engineering","Commercial","Finance","Other"];',
+    'const DEPTS = ["Trading","Research","Operations","Engineering","Biz Dev","Finance","Other"];', "team list")
+
 # 2c) One player per name: a name already in use can't be taken by another browser (stops replaying the day
 #     under the same name from a new device); the player is pointed to device linking instead.
 _DEPT = '      if (!S.edit.dept) return toast("Pick your team.");'
@@ -122,9 +126,12 @@ ADAPTER = r'''<script src="https://www.gstatic.com/firebasejs/%(sdk)s/firebase-a
     delete: () => ref.delete(),
     onSnapshot: (ok, err) => ref.onSnapshot(s => ok({id: s.id, exists: s.exists, data: () => dec(s.data())}), err)
   });
+  // Team renamed: "Commercial" is now "Biz Dev" (older player records still store the old name)
+  const teamFix = x => (x && x.dept === "Commercial" ? Object.assign({}, x, {dept: "Biz Dev"}) : x);
+  window.GH_TEAMFIX = teamFix;
   const wrapCol = ref => ({
     add: data => ref.add(data),
-    onSnapshot: (ok, err) => ref.onSnapshot(s => ok({docs: s.docs.map(x => ({id: x.id, data: () => x.data()}))}), err)
+    onSnapshot: (ok, err) => ref.onSnapshot(s => ok({docs: s.docs.map(x => ({id: x.id, data: () => (ref.id === "players" ? teamFix(x.data()) : x.data())}))}), err)
   });
   // Extra question batches: published as static files in the repo (docs/bank/*.json) by the daily top-up,
   // merged with any bank/* docs in Firestore. The game appends batches in (added, id) order, so past sets never change.
