@@ -215,6 +215,7 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   const oc = [...T1.document.querySelectorAll("table.lb tr")].find(r => /Old Comm/.test(r.textContent));
   ok(oc && /Biz Dev/.test(oc.textContent) && !/Commercial/.test(txt(T1)), "old Commercial player is shown under Biz Dev");
   // combo bonus switched off from GH_NOCOMBO: simulate a page where that date has already passed
+  ok(!/Combo bonus/.test(txt(A)) && !/Combo bonus:/.test(html), "front page never mentions a combo bonus");
   ok(/const GH_NOCOMBO = "\d{4}-\d{2}-\d{2}";/.test(html), "combo cut-off date is set");
   const NC = win(null, html.replace(/const GH_NOCOMBO = "[\d-]+";/, 'const GH_NOCOMBO = "2000-01-01";')); await sleep(150);
   await join(NC, "No Combo", "Finance"); await sleep(80);

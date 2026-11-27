@@ -69,7 +69,7 @@ d = must_replace(d, 'S.players = m; S.loaded = true; render();',
 # 2b1) No combo bonus from GH_NOCOMBO (set in gh_header.js)
 d = must_replace(d, "const pts = points(ok, ms, ok ? run + 1 : 0);", "const pts = points(ok, ms, ok && P.key < GH_NOCOMBO ? run + 1 : 0);", "combo off")
 d = must_replace(d, """    '<li><b>Combo bonus:</b> +100 for each consecutive correct answer after the first, up to +400 per question.</li>' +""",
-    """    (S.key < GH_NOCOMBO ? '<li><b>Combo bonus:</b> +100 for each consecutive correct answer after the first, up to +400 per question.</li>' : '') +""", "combo rules text")
+    "", "combo rules text")
 
 # 2b2) Team list: "Commercial" renamed "Biz Dev" (trial)
 d = must_replace(d, 'const DEPTS = ["Trading","Research","Operations","Engineering","Commercial","Finance","Other"];',
