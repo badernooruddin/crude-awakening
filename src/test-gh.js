@@ -45,9 +45,9 @@ function makeFirebase(user){
 }
 const ORGANISER = "organiser@example.com"; // stands in for an account listed in firestore.rules owner()
 let REPO = null; const FAILNEXT = {n: 0, code: ""}; // {"index.json": {...}, "b1.json": {...}}
-function win(user){
+function win(user, htmlOverride){
   const {fb, auth} = makeFirebase(user);
-  const dom = new JSDOM(html.replace("<script>\n(function(){\n  if (!window.firebase) return;", "<script>window.firebase = window.__fb;\n(function(){\n  if (!window.firebase) return;"),
+  const dom = new JSDOM((htmlOverride || html).replace("<script>\n(function(){\n  if (!window.firebase) return;", "<script>window.firebase = window.__fb;\n(function(){\n  if (!window.firebase) return;"),
     {runScripts: "dangerously", url: "https://badernooruddin.github.io/crude-awakening/", pretendToBeVisual: true,
      beforeParse(w){ w.__fb = fb; w.HTMLElement.prototype.scrollIntoView = () => {};
        w.fetch = async u => { const f = String(u).replace(/^bank\//, ""); const b = REPO && REPO[f]; return {ok: !!b, json: async () => JSON.parse(JSON.stringify(b))}; }; }});
@@ -214,6 +214,14 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); i
   await join(T1, "Team Tester", "Biz Dev"); await sleep(150);
   const oc = [...T1.document.querySelectorAll("table.lb tr")].find(r => /Old Comm/.test(r.textContent));
   ok(oc && /Biz Dev/.test(oc.textContent) && !/Commercial/.test(txt(T1)), "old Commercial player is shown under Biz Dev");
+  // combo bonus switched off from GH_NOCOMBO: simulate a page where that date has already passed
+  ok(/const GH_NOCOMBO = "\d{4}-\d{2}-\d{2}";/.test(html), "combo cut-off date is set");
+  const NC = win(null, html.replace(/const GH_NOCOMBO = "[\d-]+";/, 'const GH_NOCOMBO = "2000-01-01";')); await sleep(150);
+  await join(NC, "No Combo", "Finance"); await sleep(80);
+  ok(!/Combo bonus/.test(txt(NC)), "how-it-works no longer mentions the combo bonus");
+  ok(await playAll(NC, () => 0), "plays a set with the combo switched off"); await sleep(200);
+  const ncd = store.get("players/" + NC.__auth.currentUser.uid).days[lon];
+  ok(ncd && ncd.a.every(x => !x.b) && ncd.a.filter(x => x.ok).every(x => x.p >= 500 && x.p <= 1000), "no combo points: every correct answer scores 500–1,000 only");
   // a wrong code is refused
   const P3 = win(null); await sleep(150); click(P3, "#lnkopen"); await sleep(60); P3.document.getElementById("lnkin").value = "ZZZZZZZZ"; click(P3, "#lnkuse"); await sleep(200);
   ok(P3.document.getElementById("lnkmsg").textContent.includes("isn't valid"), "unknown code is refused with a clear message");

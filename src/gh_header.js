@@ -30,3 +30,6 @@ function header(){
 const GH_TAUNTS = ["Still long yourself?", "Your desk can see the leaderboard. No pressure.", "Twenty seconds a question. No calling a broker.", "Confidence is not a fundamental.", "Yesterday's close has been noted.", "Go on. Take the position.", "You can't hedge this one.", "Ten questions. Your mark moves either way.", "The leaderboard has a long memory.", "Everyone's a ten until the set opens.", "Loud on the desk. Quiet on the leaderboard?", "Price discovery starts when you press Play."];
 function ghTaunt(){ const k = S.key || ""; let n = 0; for (const c of k) n = (n * 31 + c.charCodeAt(0)) % 9973; return GH_TAUNTS[n % GH_TAUNTS.length]; }
 function ghVerdict(n){ return n >= 10 ? "Ten out of ten. For once, the self-estimate was the right price." : n >= 8 ? "Strong book. One or two positions you'd rather not discuss." : n >= 5 ? "Flat on the day. Nobody got hurt, nobody got a bonus." : n >= 2 ? "Deep contango: your knowledge is worth more in the future." : "Wide of the market. Tell the desk the Wi-Fi dropped."; }
+// Combo bonus for consecutive correct answers is switched off from this set onwards (London date):
+// points should reflect knowledge and speed only. Earlier days keep the scores they were played with.
+const GH_NOCOMBO = "2026-11-28";
