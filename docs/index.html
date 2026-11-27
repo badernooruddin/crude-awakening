@@ -406,7 +406,13 @@ textarea.share{font-family:inherit}
     const rows = ADM.players.map(p => { const ds = daysOf(p); return {p, days: ds.filter(d => p.days[d].done).length, last: ds.filter(d => p.days[d].done).pop() || "", total: ds.reduce((s, d) => s + scoreOf(p, d), 0), streak: strk(p)}; });
     const S = {last: (a, b) => (b.last > a.last ? 1 : b.last < a.last ? -1 : 0), name: (a, b) => a.p.name.localeCompare(b.p.name), total: (a, b) => b.total - a.total, streak: (a, b) => b.streak - a.streak, days: (a, b) => b.days - a.days};
     rows.sort(S[ADM.sort] || S.last);
-    let h = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><span class="note">Sort:</span>' + [["last", "Last played"], ["name", "Name"], ["total", "Total score"], ["streak", "Streak"], ["days", "Days played"]].map(s => smallBtn((ADM.sort === s[0] ? "● " : "") + s[1], 'data-adm-sort="' + s[0] + '"')).join("") + smallBtn("⬇ Export CSV", 'data-adm-csv="1"') + smallBtn("Merge duplicates", 'id="mrgopen"') + '</div>';
+    let edit = '';
+    if (ADM.edit) {
+      const p = ADM.players.find(x => x.id === ADM.edit);
+      if (p) edit = '<div class="card" id="adm-editcard" style="margin:0 0 12px;border-color:var(--sun)"><b>Edit ' + esc(p.name) + '</b><p class="note" style="margin:8px 0 4px">Display name</p><input class="in" id="adm-name" maxlength="24" value="' + esc(p.name) + '"><p class="note" style="margin:8px 0 4px">Team</p><select class="in" id="adm-dept">' +
+        ["Trading", "Research", "Operations", "Engineering", "Biz Dev", "Finance", "Other"].map(t => '<option' + (t === p.dept ? " selected" : "") + '>' + t + '</option>').join("") + '</select><button class="btn" data-adm-save="' + esc(p.id) + '" style="margin-top:10px">Save</button><button class="btn sec" data-adm-cancel="1" style="margin-top:6px">Cancel</button></div>';
+    }
+    let h = edit + '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><span class="note">Sort:</span>' + [["last", "Last played"], ["name", "Name"], ["total", "Total score"], ["streak", "Streak"], ["days", "Days played"]].map(s => smallBtn((ADM.sort === s[0] ? "● " : "") + s[1], 'data-adm-sort="' + s[0] + '"')).join("") + smallBtn("⬇ Export CSV", 'data-adm-csv="1"') + smallBtn("Merge duplicates", 'id="mrgopen"') + '</div>';
     const td = 'style="padding:5px 6px;vertical-align:top"';
     h += '<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><tr>' + ["Player", "Days", "Streak", "Total", "Last"].map(x => '<th style="text-align:left;padding:5px 6px;border-bottom:1px solid var(--line)">' + x + '</th>').join("") + '</tr>' +
       rows.map(r => {
@@ -414,11 +420,6 @@ textarea.share{font-family:inherit}
         return '<tr><td ' + td + '><b>' + esc(r.p.name) + '</b><br><span class="note">' + esc(r.p.dept || "") + ((r.p.uids || []).length ? ' · ' + (r.p.uids.length + 1) + ' devices' : '') + '</span></td><td ' + td + '>' + r.days + '</td><td ' + td + '>' + (r.streak ? "🔥" + r.streak : "–") + '</td><td ' + td + '>' + fmt(r.total) + '</td><td ' + td + '>' + (r.last === k ? "today" : (r.last ? r.last.slice(5) : "–")) + '</td></tr>' +
           '<tr><td colspan="5" style="padding:0 2px 6px;border-bottom:1px solid var(--line)">' + smallBtn("Edit", 'data-adm-edit="' + id + '"') + (r.p.days && r.p.days[k] ? smallBtn(armed === "reset:" + r.p.id ? "Tap again to confirm" : "Let replay today", 'data-adm-reset="' + id + '"') : "") + smallBtn(armed === "del:" + r.p.id ? "Tap again to confirm" : "Remove", 'data-adm-del="' + id + '"') + '</td></tr>';
       }).join("") + '</table></div>';
-    if (ADM.edit) {
-      const p = ADM.players.find(x => x.id === ADM.edit);
-      if (p) h += '<div class="card" style="margin-top:12px"><b>Edit ' + esc(p.name) + '</b><p class="note" style="margin:8px 0 4px">Display name</p><input class="in" id="adm-name" maxlength="24" value="' + esc(p.name) + '"><p class="note" style="margin:8px 0 4px">Team</p><select class="in" id="adm-dept">' +
-        ["Trading", "Research", "Operations", "Engineering", "Biz Dev", "Finance", "Other"].map(t => '<option' + (t === p.dept ? " selected" : "") + '>' + t + '</option>').join("") + '</select><button class="btn" data-adm-save="' + esc(p.id) + '" style="margin-top:10px">Save</button></div>';
-    }
     h += '<p class="note" style="margin-top:10px">“Let replay today” clears today\'s attempt so that player can play the set again (use it for genuine technical problems). “Remove” deletes the player and their scores.</p>';
     return h;
   }
@@ -464,6 +465,8 @@ textarea.share{font-family:inherit}
     const body = ADM.tab === "players" ? viewPlayers() : ADM.tab === "questions" ? await viewQuestions() : ADM.tab === "errors" ? viewErrors() : ADM.tab === "notice" ? await viewNotice() : viewToday();
     const o = dialog('<b>Organiser dashboard</b>' + tabsHtml() + '<div id="adm-body">' + body + '</div>');
     o.firstChild.style.maxWidth = "680px"; o.firstChild.style.maxHeight = "88vh"; o.firstChild.style.overflow = "auto";
+    const ec = document.getElementById("adm-editcard");
+    if (ec) { try { ec.scrollIntoView({block: "start"}); } catch (e) {} const n = document.getElementById("adm-name"); if (n) { n.focus(); n.select && n.select(); } }
   }
   function csv(){
     const k = TODAY(), rows = [["name", "team", "joined", "days_played", "total_score", "streak", "last_played", "today_score"]];
@@ -477,7 +480,8 @@ textarea.share{font-family:inherit}
       if (ds.admTab) { ADM.tab = ds.admTab; ADM.edit = null; ADM.arm = null; return admRender(); }
       if (ds.admSort) { ADM.sort = ds.admSort; return admRender(); }
       if (ds.admCsv) return csv();
-      if (ds.admEdit) { ADM.edit = ds.admEdit; return admRender(); }
+      if (ds.admEdit) { ADM.edit = ds.admEdit; ADM.arm = null; return admRender(); }
+      if (ds.admCancel) { ADM.edit = null; return admRender(); }
       if (ds.admSave) {
         const name = (document.getElementById("adm-name").value || "").trim().slice(0, 24), dept = document.getElementById("adm-dept").value;
         if (!name) return;
@@ -513,7 +517,7 @@ textarea.share{font-family:inherit}
       }
     } catch (e) { logErr("admin action", e); const b = document.getElementById("adm-body"); if (b) b.insertAdjacentHTML("afterbegin", '<p class="note" style="color:#ff8a8a">That didn\'t work (' + esc(e && e.code || "error") + '). Try again.</p>'); }
   }
-  document.addEventListener("click", e => { const t = e.target && e.target.closest && e.target.closest("[data-adm-tab],[data-adm-sort],[data-adm-csv],[data-adm-edit],[data-adm-save],[data-adm-reset],[data-adm-del],[data-adm-unflag],[data-adm-clearerrs],[data-adm-notice],[data-adm-dnote],[data-adm-dnote-clear]"); if (t) admAct(t); });
+  document.addEventListener("click", e => { const t = e.target && e.target.closest && e.target.closest("[data-adm-tab],[data-adm-sort],[data-adm-csv],[data-adm-edit],[data-adm-cancel],[data-adm-save],[data-adm-reset],[data-adm-del],[data-adm-unflag],[data-adm-clearerrs],[data-adm-notice],[data-adm-dnote],[data-adm-dnote-clear]"); if (t) admAct(t); });
 
   // Daily note under the title: config/note-YYYY-MM-DD (London date), switches over at midnight
   let NOTEDAY = null, NOTEOFF = null;
